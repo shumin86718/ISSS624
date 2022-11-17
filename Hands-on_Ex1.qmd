@@ -88,6 +88,7 @@ st_geometry(mpsz)
 ```
 
 #### 
+
 Working with glimpse()
 
 ```{r}
@@ -101,6 +102,7 @@ head(mpsz, n=5)
 ```
 
 ### 
+
 Plotting the Geospatial Data
 
 ```{r}
@@ -307,6 +309,7 @@ popdata <- read_csv("data/aspatial/respopagesextod2011to2020.csv")
 ```
 
 ### 
+
 Data Preparation
 
 #### Data wrangling
@@ -360,7 +363,7 @@ qtm(mpsz_pop2020,
     fill = "DEPENDENCY")
 ```
 
-### Creating a choropleth map by using *tmap*\'s elements
+### Creating a choropleth map by using *tmap*'s elements
 
 ```{r}
 tm_shape(mpsz_pop2020)+
@@ -412,6 +415,7 @@ tm_shape(mpsz_pop2020)+
 ### Data classification methods of **tmap**
 
 #### 
+
 Plotting choropleth maps with built-in classification methods
 
 ```{r}
