@@ -195,11 +195,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#importing-data-into-r" id="toc-importing-data-into-r" class="nav-link" data-scroll-target="#importing-data-into-r">Importing Data into R</a></li>
   <li><a href="#importing-attribute-data-into-r" id="toc-importing-attribute-data-into-r" class="nav-link" data-scroll-target="#importing-attribute-data-into-r">Importing Attribute Data into R</a></li>
   <li><a href="#section-2" id="toc-section-2" class="nav-link" data-scroll-target="#section-2"></a></li>
-  </ul></li>
-  <li><a href="#choropleth-mapping-geospatial-data-using-tmap" id="toc-choropleth-mapping-geospatial-data-using-tmap" class="nav-link" data-scroll-target="#choropleth-mapping-geospatial-data-using-tmap">Choropleth Mapping Geospatial Data Using <em>tmap</em></a>
-  <ul class="collapse">
-  <li><a href="#plotting-a-choropleth-map-quickly-by-using-qtm" id="toc-plotting-a-choropleth-map-quickly-by-using-qtm" class="nav-link" data-scroll-target="#plotting-a-choropleth-map-quickly-by-using-qtm">Plotting a choropleth map quickly by using <em>qtm()</em></a></li>
-  <li><a href="#creating-a-choropleth-map-by-using-tmaps-elements" id="toc-creating-a-choropleth-map-by-using-tmaps-elements" class="nav-link" data-scroll-target="#creating-a-choropleth-map-by-using-tmaps-elements">Creating a choropleth map by using <em>tmap</em>’s elements</a></li>
+  <li><a href="#data-preparation" id="toc-data-preparation" class="nav-link" data-scroll-target="#data-preparation">Data Preparation</a></li>
+  <li><a href="#choropleth-mapping-geospatial-data-using-tmap" id="toc-choropleth-mapping-geospatial-data-using-tmap" class="nav-link" data-scroll-target="#choropleth-mapping-geospatial-data-using-tmap">Choropleth Mapping Geospatial Data Using <em>tmap</em></a></li>
   <li><a href="#data-classification-methods-of-tmap" id="toc-data-classification-methods-of-tmap" class="nav-link" data-scroll-target="#data-classification-methods-of-tmap">Data classification methods of <strong>tmap</strong></a></li>
   <li><a href="#colour-scheme" id="toc-colour-scheme" class="nav-link" data-scroll-target="#colour-scheme">Colour Scheme</a></li>
   <li><a href="#map-layouts" id="toc-map-layouts" class="nav-link" data-scroll-target="#map-layouts">Map Layouts</a></li>
@@ -890,7 +887,9 @@ dbl (2): Pop, Time
 </section>
 <section id="section-2" class="level3">
 <h3 class="anchored" data-anchor-id="section-2"></h3>
-<p>Data Preparation</p>
+</section>
+<section id="data-preparation" class="level3">
+<h3 class="anchored" data-anchor-id="data-preparation">Data Preparation</h3>
 <section id="data-wrangling" class="level4">
 <h4 class="anchored" data-anchor-id="data-wrangling">Data wrangling</h4>
 <div class="cell">
@@ -945,11 +944,10 @@ dbl (2): Pop, Time
 </div>
 </section>
 </section>
-</section>
-<section id="choropleth-mapping-geospatial-data-using-tmap" class="level2">
-<h2 class="anchored" data-anchor-id="choropleth-mapping-geospatial-data-using-tmap">Choropleth Mapping Geospatial Data Using <em>tmap</em></h2>
-<section id="plotting-a-choropleth-map-quickly-by-using-qtm" class="level3">
-<h3 class="anchored" data-anchor-id="plotting-a-choropleth-map-quickly-by-using-qtm">Plotting a choropleth map quickly by using <em>qtm()</em></h3>
+<section id="choropleth-mapping-geospatial-data-using-tmap" class="level3">
+<h3 class="anchored" data-anchor-id="choropleth-mapping-geospatial-data-using-tmap">Choropleth Mapping Geospatial Data Using <em>tmap</em></h3>
+<section id="plotting-a-choropleth-map-quickly-by-using-qtm" class="level4">
+<h4 class="anchored" data-anchor-id="plotting-a-choropleth-map-quickly-by-using-qtm">Plotting a choropleth map quickly by using <em>qtm()</em></h4>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tmap_mode</span>(<span class="st">"plot"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
@@ -962,8 +960,8 @@ dbl (2): Pop, Time
 </div>
 </div>
 </section>
-<section id="creating-a-choropleth-map-by-using-tmaps-elements" class="level3">
-<h3 class="anchored" data-anchor-id="creating-a-choropleth-map-by-using-tmaps-elements">Creating a choropleth map by using <em>tmap</em>’s elements</h3>
+<section id="creating-a-choropleth-map-by-using-tmaps-elements" class="level4">
+<h4 class="anchored" data-anchor-id="creating-a-choropleth-map-by-using-tmaps-elements">Creating a choropleth map by using <em>tmap</em>’s elements</h4>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(mpsz_pop2020)<span class="sc">+</span></span>
 <span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="st">"DEPENDENCY"</span>, </span>
@@ -986,6 +984,7 @@ dbl (2): Pop, Time
 <p><img src="Hands-on_Ex1_files/figure-html/unnamed-chunk-40-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+</section>
 <section id="drawing-a-base-map" class="level4">
 <h4 class="anchored" data-anchor-id="drawing-a-base-map">Drawing a base map</h4>
 <div class="cell">
@@ -1029,7 +1028,9 @@ dbl (2): Pop, Time
 <h3 class="anchored" data-anchor-id="data-classification-methods-of-tmap">Data classification methods of <strong>tmap</strong></h3>
 <section id="section-3" class="level4">
 <h4 class="anchored" data-anchor-id="section-3"></h4>
-<p>Plotting choropleth maps with built-in classification methods</p>
+</section>
+<section id="plotting-choropleth-maps-with-built-in-classification-methods" class="level4">
+<h4 class="anchored" data-anchor-id="plotting-choropleth-maps-with-built-in-classification-methods">Plotting choropleth maps with built-in classification methods</h4>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(mpsz_pop2020)<span class="sc">+</span></span>
 <span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="st">"DEPENDENCY"</span>,</span>
