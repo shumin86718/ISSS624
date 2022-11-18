@@ -89,7 +89,7 @@ st_geometry(mpsz)
 
 #### 
 
-Working with glimpse()
+#### Working with glimpse()
 
 ```{r}
 glimpse(mpsz)
@@ -430,6 +430,46 @@ tm_shape(mpsz_pop2020)+
 tm_shape(mpsz_pop2020)+
   tm_fill("DEPENDENCY",
           n = 5,
+          style = "equal") +
+  tm_borders(alpha = 0.5)
+```
+
+#2 classes
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 2,
+          style = "equal") +
+  tm_borders(alpha = 0.5)
+```
+
+#6 classes
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 6,
+          style = "equal") +
+  tm_borders(alpha = 0.5)
+```
+
+#10 classes
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 10,
+          style = "equal") +
+  tm_borders(alpha = 0.5)
+```
+
+#20 classes
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 20,
           style = "equal") +
   tm_borders(alpha = 0.5)
 ```
