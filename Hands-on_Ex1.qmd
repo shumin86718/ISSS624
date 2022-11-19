@@ -60,7 +60,7 @@ library(p,character.only = T)
 ### Importing polygon feature data in shapefile format
 
 ```{r}
-mpsz = st_read(dsn = "data/geospatial",
+mpsz = st_read(dsn = "hands-on_ex1/data/geospatial",
 
 layer = "MP14_SUBZONE_WEB_PL")
 ```
@@ -68,7 +68,7 @@ layer = "MP14_SUBZONE_WEB_PL")
 ### Importing polyline feature data in shapefile form
 
 ```{r}
-cyclingpath = st_read(dsn = "data/geospatial",
+cyclingpath = st_read(dsn = "hands-on_ex1/data/geospatial",
 
 layer = "CyclingPath")
 ```
@@ -76,7 +76,7 @@ layer = "CyclingPath")
 ### Importing GIS data in kml format
 
 ```{r}
-preschool = st_read("data/geospatial/pre-schools-location-kml.kml")
+preschool = st_read("hands-on_ex1/data/geospatial/pre-schools-location-kml.kml")
 ```
 
 ### Checking the Content of A Simple Feature Data Frame
@@ -150,7 +150,7 @@ st_geometry(preschool3414)
 #### Importing the aspatial data
 
 ```{r}
-listings <- read_csv("data/aspatial/listings.csv")
+listings <- read_csv("hands-on_ex1/data/aspatial/listings.csv")
 ```
 
 ```{r}
@@ -294,7 +294,7 @@ pacman::p_load(sf, tmap, tidyverse)
 ### Importing Data into R
 
 ```{r}
-mpsz <- st_read(dsn = "data/geospatial", 
+mpsz <- st_read(dsn = "hands-on_ex1/data/geospatial", 
                 layer = "MP14_SUBZONE_WEB_PL")
 ```
 
@@ -305,7 +305,7 @@ mpsz
 ### Importing Attribute Data into R
 
 ```{r}
-popdata <- read_csv("data/aspatial/respopagesextod2011to2020.csv")
+popdata <- read_csv("hands-on_ex1/data/aspatial/respopagesextod2011to2020.csv")
 ```
 
 ### 
@@ -350,7 +350,7 @@ mpsz_pop2020 <- left_join(mpsz, popdata2020,
 ```
 
 ```{r}
-write_rds(mpsz_pop2020, "data/rds/mpszpop2020.rds")
+write_rds(mpsz_pop2020, "hands-on_ex1/data/rds/mpszpop2020.rds")
 ```
 
 ### Choropleth Mapping Geospatial Data Using *tmap*
