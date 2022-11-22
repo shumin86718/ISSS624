@@ -30,7 +30,7 @@ In this hands-on exercise, we will learn how to compute Global and Local Measure
 The code chunk below will install and load tidyverse and sf packages.
 
 ```{r}
-pacman::p_load(sf, tmap, tidyverse, spdep)
+pacman::p_load(sf, tmap, tidyverse, spdep,ggplot2)
 ```
 
 ### 4.2.1 Importing Geospatial Data
@@ -85,8 +85,6 @@ tmap_arrange(equal,
              ncol=2)
 ```
 
-## 
-
 ## 4.4 Global Spatial Autocorrelation
 
 In this section, we will learn how to compute global spatial autocorrelation statistics and to perform spatial complete randomness test for global spatial autocorrelation.
@@ -125,8 +123,6 @@ The input of *nb2listw()* must be an object of class **nb**. The syntax of the f
 ### 4.4.3 Global Spatial Autocorrelation: Moran's I
 
 In this section, we will learn how to perform Moran's I statistics testing by using [*moran.test()*](https://r-spatial.github.io/spdep/reference/moran.test.html) of **spdep**.
-
-### 
 
 ### 4.4.4 Moron's I test
 
@@ -177,13 +173,33 @@ abline(v=0,
 ```
 
 | **Question:**
-| What statistical observation can you draw fro mthe output above?
-
-It's not normally distributed, and a bit skewed to right.
+| What statistical observation can you draw from the output above?
+| 
+| It's not normally distributed, and a bit skewed to right.
 
 **Using ggplot2 to plot the histogram**
 
-xxx
+```{r}
+bperm_df <- data.frame(bperm$res)
+```
+
+```{r}
+ggplot(data=bperm_df,
+
+aes(x= bperm.res))+
+
+geom_histogram(bins=20,
+
+color="black",
+
+fill="light grey") +
+
+labs(title = "Histogram",
+
+x = "Simulated Moran's I",
+
+y = "Frequency")
+```
 
 ### 4.4.5 Global Spatial Autocorrelation: Geary's
 
@@ -250,8 +266,9 @@ print(MI_corr)
 ```
 
 | **Question**: What statistical observation can you draw from the plot above?
+| 
 
-From the plot can only observed the correlation values are not statistically significant.
+| From the plot can only observed the correlation values are not statistically significant.
 
 ### 4.5.2 Compute Geary's C correlogram and plot
 
@@ -369,8 +386,6 @@ nci <- moran.plot(hunan$GDPPC, rswm_q,
 
 The plot is split in 4 quadrants. The top right corner belongs to areas that have high GDPPC and are surrounded by other areas that have the average level of GDPPC. This are the high-high locations in the lesson slide.
 
-### 
-
 ### 4.7.2 Plotting Moran scatterplot with standardised variable
 
 First we will use [*scale()*](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/scale) to centers and scales the variable. Here centering is done by subtracting the mean (omitting NAs) the corresponding columns, and scaling is done by dividing the (centered) variable by their standard deviations.
@@ -477,7 +492,7 @@ tmap_arrange(gdppc, LISAmap, asp=1, ncol=2)
 
 | **Question**: What statistical observations can you draw from the LISA map above?
 
-xxx
+| Area units which have same range of GDPPC also have high-high significance.
 
 ## 4.8 Hot Spot and Cold Spot Area Analysis
 
@@ -542,9 +557,7 @@ summary(k1dists)
 
 The summary report shows that the largest first nearest neighbour distance is 61.79 km, so using this as the upper threshold gives certainty that all units will have at least one neighbour.
 
-#### 
-
-4.8.2.3 Computing fixed distance weight matrix
+#### 4.8.2.3 Computing fixed distance weight matrix
 
 Now, we will compute the distance weight matrix by using [*dnearneigh()*](https://r-spatial.github.io/spdep/reference/dnearneigh.html) as shown in the code chunk below.
 
@@ -618,11 +631,9 @@ Gimap <-tm_shape(hunan.gi) +
 tmap_arrange(gdppc, Gimap, asp=1, ncol=2)
 ```
 
-| 
+| Question: What statistical observation can you draw from the Gi map above?
 
-Question: What statistical observation can you draw from the Gi map above?
-
-xxxx
+| Area units which have similar GDP range have the high local Gi.
 
 ### 4.9.3 Gi statistics using adaptive distance
 
@@ -655,4 +666,6 @@ tmap_arrange(gdppc,
              ncol=2)
 ```
 
-| Question: What statistical observation can you draw from the Gi map above? xxx
+| Question: What statistical observation can you draw from the Gi map above?
+| 
+| Areas have high Gi for adaptive distance weights became more compare to Gi map with fixed distance weights.
