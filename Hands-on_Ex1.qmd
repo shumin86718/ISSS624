@@ -335,6 +335,10 @@ mutate(`DEPENDENCY` = (`YOUNG` + `AGED`)
        `TOTAL`, `DEPENDENCY`)
 ```
 
+```{r}
+head(popdata2020, n =10)
+```
+
 #### Joining the attribute data and geospatial data
 
 ```{r}

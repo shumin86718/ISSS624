@@ -1,20 +1,5 @@
 {
-  "index.qmd": {
-    "index.html": "0d4c0110"
-  },
-  "about.qmd": {
-    "about.html": "92cc0e06"
-  },
-  "Hands-on_Ex1.qmd": {
-    "Hands-on_Ex1.html": "945f439d"
-  },
-  "Inclass_Ex1.qmd": {
-    "Inclass_Ex1.html": "4eb5a6de"
-  },
-  "In-class_Ex/In-class_Ex1/In-class_ex1.qmd": {
-    "In-class_ex1.html": "598862a0"
-  },
-  "Hands-on_Ex/Hands-on_Ex2/Hands-on_Ex2.qmd": {
-    "Hands-on_Ex2.html": "2555aced"
+  "Take-home_Ex/Take-home_Ex1/Take-home_Ex1.qmd": {
+    "Take-home_Ex1.html": "9d249fff"
   }
 }

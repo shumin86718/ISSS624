@@ -1,0 +1,676 @@
+---
+title: "Take-home_Ex1"
+editor: visual
+---
+
+# ISSS624 Take-Home Exercise 1
+
+> By Han Shumin
+>
+> 29 November 2022
+
+## 1 Overview
+
+## 2 The Dataset
+
+## 3 Setting Up Working Environment
+
+The code chunk below will install and load tidyverse and sf packages.
+
+```{r}
+pacman::p_load(sf, tmap, tidyverse, spdep,ggplot2, dplyr)
+```
+
+## 4 Geopsatial Data Wrangling
+
+### 4.1 Loading up the Geospatial Data
+
+xxxx
+
+```{r}
+nigeria_sf <- st_read(dsn = "data/geospatial", 
+                 layer = "geoBoundaries-NGA-ADM2")
+```
+
+### 4.2 Import csv file into R environment
+
+```{r}
+nigeria_data <- read_csv("data/aspatial/nigeria.csv")
+```
+
+```{r}
+#nigeria_data[rowSums(is.na(nigeria_data))!=0,]
+```
+
+```{r}
+#nigeria_data$`#status_clean`[is.na(nigeria_data$`#status_clean`)] <- "Unknown"
+```
+
+```{r}
+functional <- nigeria_data %>%
+  filter(`#status_clean` %in%  c("Functional", "Functional but not in use" , "Functional but needs repair")) %>%
+  select(`#lat_deg`, `#lon_deg`, `#water_source_category`, `#clean_adm2`, `#install_year`, `#status_clean`, `#distance_to_primary_road`, `#distance_to_secondary_road`, `#distance_to_tertiary_road`, `#distance_to_city`, `#distance_to_town`)
+```
+
+```{r}
+nonfunctional <- nigeria_data %>%
+  filter(`#status_clean` %in%  c("Abandoned/Decommissioned", "Abandoned" , "Non functional due to dry season", "Non functional due to dry season", "Non-Functional due to dry season")) %>%
+  select(`#lat_deg`, `#lon_deg`, `#water_source_category`, `#clean_adm2`, `#install_year`, `#status_clean`, `#distance_to_primary_road`, `#distance_to_secondary_road`, `#distance_to_tertiary_road`, `#distance_to_city`, `#distance_to_town`)
+```
+
+```{r}
+st_geometry(nigeria_sf)
+```
+
+```{r}
+glimpse(nigeria_sf)
+```
+
+```{r}
+#head(nigeria_sf, n=5)  
+```
+
+```{r}
+#plot(nigeria_sf)
+```
+
+```{r}
+#plot(st_geometry(nigeria_sf))
+```
+
+```{r}
+st_crs(nigeria_sf)
+```
+
+```{r}
+nigeria_sf26391 <- st_transform(nigeria_sf, crs = 26391)
+```
+
+```{r}
+st_crs(nigeria_sf26391)
+```
+
+```{r}
+nigeria_data_sf <- st_as_sf(nigeria_data,
+                            coords = c("#lon_deg", "#lat_deg"),
+                            crs=4326) %>%
+  st_transform(crs = 26391)
+```
+
+```{r}
+functional <- st_as_sf(functional,
+                            coords = c("#lon_deg", "#lat_deg"),
+                            crs=4326) %>%
+  st_transform(crs = 26391)
+```
+
+```{r}
+nonfunctional <- st_as_sf(nonfunctional,
+                            coords = c("#lon_deg", "#lat_deg"),
+                            crs=4326) %>%
+  st_transform(crs = 26391)
+```
+
+```{r}
+nigeria_sf26391$`Waterpoint Count`<- lengths(st_intersects(nigeria_sf26391, nigeria_data_sf))
+```
+
+```{r}
+nigeria_sf26391$`functional Waterpoint Count`<- lengths(st_intersects(nigeria_sf26391, functional))
+```
+
+```{r}
+nigeria_sf26391$`nonfunctional Waterpoint Count`<- lengths(st_intersects(nigeria_sf26391, nonfunctional))
+```
+
+```{r}
+#summary(nigeria_sf26391$`Waterpoint Count`)
+```
+
+```{r}
+#top_n(nigeria_sf26391, 1, `Waterpoint Count`)
+```
+
+```{r}
+#summary(nigeria_sf26391$`functional Waterpoint Count`)
+```
+
+```{r}
+#summary(nigeria_sf26391$`nonfunctional Waterpoint Count`)
+```
+
+```{r}
+#top_n(nigeria_sf26391, 1, `functional Waterpoint Count`)
+```
+
+```{r}
+#top_n(nigeria_sf26391, 1, `nonfunctional Waterpoint Count`)
+```
+
+```{r}
+nigeria_sf26391 <- nigeria_sf26391 %>%
+  mutate(`functional_ratio` = `functional Waterpoint Count`/`Waterpoint Count`)
+```
+
+```{r}
+nigeria_sf26391 <- nigeria_sf26391 %>%
+  mutate(`nonfunctional_ratio` = `nonfunctional Waterpoint Count`/`Waterpoint Count`)
+```
+
+```{r}
+#nigeria_sf26391$`functional_ratio`
+```
+
+```{r}
+#nigeria_sf26391$`nonfunctional_ratio`
+```
+
+```{r}
+#tmap_mode("plot")
+#qtm(nigeria_sf26391, 
+#    fill = "functional_ratio")
+```
+
+```{r}
+tm_shape(nigeria_sf26391)+
+  tm_fill("functional_ratio", 
+          style = "quantile", 
+          palette = "Blues",
+          title = "functional waterpoint ratio") +
+  tm_layout(main.title = "Distribution of Functional Water Point Ratio by L2 LGA",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2) +
+  tm_credits("Source: Level 2 Local Government Area from GeoBoundaries\n and Water Point data from WPdx Global Data Repositories", 
+             position = c("left", "bottom"))
+```
+
+```{r}
+tm_shape(nigeria_sf26391)+
+  tm_fill("nonfunctional_ratio", 
+          style = "quantile", 
+          palette = "Greens",
+          title = "nonfunctional waterpoint ratio") +
+  tm_layout(main.title = "Distribution of nonFunctional Water Point Ratio by L2 LGA",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2) +
+  tm_credits("Source: Level 2 Local Government Area from GeoBoundaries\n and Water Point data from WPdx Global Data Repositories", 
+             position = c("left", "bottom"))
+```
+
+## 5 Spatial Weights and Applications
+
+### 5.1 Computing Contiguity Spatial Weights
+
+#### 5.1.1 Computing (QUEEN) contiguity based neighbours
+
+```{r}
+wm_q_nigeria_sf26391 <- poly2nb(nigeria_sf26391, queen=TRUE)
+summary(wm_q_nigeria_sf26391)
+```
+
+```{r}
+str(wm_q_nigeria_sf26391)
+```
+
+#### 5.1.2 Creating (ROOK) contiguity based neighbours
+
+```{r}
+wm_r_nigeria_sf26391 <- poly2nb(nigeria_sf26391, queen=FALSE)
+summary(wm_r_nigeria_sf26391)
+```
+
+```{r}
+str(wm_r_nigeria_sf26391)
+```
+
+```{r}
+longitude <- map_dbl(nigeria_sf26391$geometry, ~st_centroid(.x)[[1]])
+```
+
+```{r}
+latitude<- map_dbl(nigeria_sf26391$geometry, ~st_centroid(.x)[[2]])
+```
+
+```{r}
+coords <- cbind(longitude, latitude)
+```
+
+```{r}
+head(coords)
+```
+
+#### 5.1.3 **Plotting Queen contiguity against ROOK contiguity based neighbours maps**
+
+```{r}
+plot(nigeria_sf26391$geometry, border="lightgrey")
+plot(wm_q_nigeria_sf26391, coords, pch = 19, cex = 0.4, add = TRUE, col= "red")
+```
+
+```{r}
+plot(nigeria_sf26391$geometry, border="lightgrey")
+plot(wm_r_nigeria_sf26391, coords, pch = 19, cex = 0.4, add = TRUE, col = "red")
+```
+
+## 6 Global Spatial Autocorrelation
+
+### 6.1 Row-standardized weights matrix
+
+```{r}
+nigeria_sf26391$`functional_ratio`[is.na(nigeria_sf26391$`functional_ratio`)] <- 0
+```
+
+```{r}
+nigeria_sf26391$`nonfunctional_ratio`[is.na(nigeria_sf26391$`nonfunctional_ratio`)] <- 0
+```
+
+```{r}
+rswm_q <- nb2listw(wm_q_nigeria_sf26391, style="W", zero.policy = TRUE)
+print(rswm_q,zero.policy = TRUE)
+```
+
+### 6.2 Global Spatial Autocorrelation: Moran's I
+
+#### 6.2.1 Moron's I test for functional waterpoint count
+
+```{r}
+moran.test(nigeria_sf26391$`functional_ratio`, 
+           listw=rswm_q, 
+           zero.policy = TRUE, 
+           na.action=na.omit)
+```
+
+**Computing Monte Carlo Moran's I**
+
+```{r}
+set.seed(1234)
+bperm_fun= moran.mc(nigeria_sf26391$`functional_ratio`, 
+                listw=rswm_q, 
+                nsim=999, 
+                zero.policy = TRUE, 
+                na.action=na.omit)
+bperm_fun
+```
+
+**Visualising Monte Carlo Moran's I**
+
+```{r}
+mean(bperm_fun$res[1:999])
+```
+
+```{r}
+var(bperm_fun$res[1:999])
+```
+
+```{r}
+summary(bperm_fun$res[1:999])
+```
+
+```{r}
+hist(bperm_fun$res, 
+     freq=TRUE, 
+     breaks=50, 
+     xlab="Simulated Moran's I")
+abline(v=0, 
+       col="red") 
+```
+
+### 6.3 Global Spatial Autocorrelation: Geary's
+
+```{r}
+geary.test(nigeria_sf26391$`functional_ratio`, 
+           listw=rswm_q, zero.policy = TRUE)
+```
+
+**Computing Monte Carlo Geary's C**
+
+```{r}
+set.seed(1234)
+bperm_fun=geary.mc(nigeria_sf26391$`functional_ratio`, 
+               listw=rswm_q, 
+               nsim=999,
+               zero.policy = TRUE)
+bperm_fun
+```
+
+**Visualising the Monte Carlo Geary's C**
+
+```{r}
+mean(bperm_fun$res[1:999])
+```
+
+```{r}
+var(bperm_fun$res[1:999])
+```
+
+```{r}
+summary(bperm_fun$res[1:999])
+```
+
+```{r}
+hist(bperm_fun$res, freq=TRUE, breaks=50, xlab="Simulated Geary c")
+abline(v=1, col="red") 
+```
+
+### 6.4 Spatial Correlogram
+
+#### 6.4.1 Compute Moran's I correlogram
+
+```{r}
+MI_corr <- sp.correlogram(wm_q_nigeria_sf26391, 
+                          nigeria_sf26391$`functional_ratio`, 
+                          order=6, 
+                          method="I", 
+                          style="W",
+                          zero.policy = TRUE)
+plot(MI_corr)
+```
+
+```{r}
+print(MI_corr)
+```
+
+#### 6.4.2 Compute Geary's C correlogram and plot
+
+```{r}
+GC_corr <- sp.correlogram(wm_q_nigeria_sf26391, 
+                          nigeria_sf26391$`functional_ratio`, 
+                          order=6, 
+                          method="C", 
+                          style="W",
+                          zero.policy = TRUE)
+plot(GC_corr)
+```
+
+```{r}
+print(GC_corr)
+```
+
+## 7 Cluster and Outlier Analysis
+
+### 7.1 Computing local Moran's I
+
+```{r}
+fips <- order(nigeria_sf26391$shapeName)
+```
+
+```{r}
+localMI <- localmoran(nigeria_sf26391$`functional_ratio`, rswm_q, zero.policy = TRUE)
+head(localMI)
+```
+
+```{r}
+df = data.frame(localMI[fips,])
+rownames(df) = make.names(nigeria_sf26391$shapeName, unique=TRUE)
+printCoefmat(df, check.names=FALSE)
+```
+
+**Mapping the local Moran's I**
+
+```{r}
+nigeria_sf26391.localMI <- cbind(nigeria_sf26391,localMI) %>%
+  rename(Pr.Ii = Pr.z....E.Ii..)
+```
+
+**Mapping local Moran's I values**
+
+```{r}
+tm_shape(nigeria_sf26391.localMI) +
+  tm_fill(col = "Ii", 
+          style = "pretty",
+          palette = "RdBu",
+          title = "local moran statistics") +
+  tm_borders(alpha = 0.5)
+```
+
+Mapping local Moran's I p-value
+
+```{r}
+tm_shape(nigeria_sf26391.localMI) +
+  tm_fill(col = "Pr.Ii", 
+          breaks=c(-Inf, 0.001, 0.01, 0.05, 0.1, Inf),
+          palette="-Blues", 
+          title = "local Moran's I p-values") +
+  tm_borders(alpha = 0.5)
+```
+
+Mapping both local Moran's I values and p-values
+
+```{r}
+localMI.map <- tm_shape(nigeria_sf26391.localMI) +
+  tm_fill(col = "Ii", 
+          style = "pretty", 
+          title = "local moran statistics") +
+  tm_borders(alpha = 0.5)
+
+pvalue.map <- tm_shape(nigeria_sf26391.localMI) +
+  tm_fill(col = "Pr.Ii", 
+          breaks=c(-Inf, 0.001, 0.01, 0.05, 0.1, Inf),
+          palette="-Blues", 
+          title = "local Moran's I p-values") +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(localMI.map, pvalue.map, asp=1, ncol=2)
+```
+
+## 8 Creating a LISA Cluster Map
+
+### 8.1 Plotting Moran scatterplot
+
+```{r}
+nci <- moran.plot(nigeria_sf26391$`functional_ratio`, rswm_q, zero.policy = TRUE,
+                  labels=as.character(nigeria_sf26391$`shapeName`), 
+                  xlab="functional waterpoint ratio", 
+                  ylab="Spatially Lag z-functional waterpoint ratio")
+```
+
+### 8.2 Plotting Moran sactterplot with standardised variable
+
+```{r}
+nigeria_sf26391$Z.functional_ratio <- scale(nigeria_sf26391$functional_ratio) %>% as.vector 
+```
+
+```{r}
+nci2 <- moran.plot(nigeria_sf26391$Z.functional_ratio, rswm_q,zero.policy = TRUE,
+                   labels=as.character(nigeria_sf26391$`shapeName`),
+                   xlab="z-functional waterpoint ratio", 
+                   ylab="Spatially Lag z-functional waterpoint ratio")
+```
+
+### 8.3 Preparing LISA map classes
+
+```{r}
+quadrant <- vector(mode="numeric",length=nrow(localMI))
+```
+
+```{r}
+DV <- nigeria_sf26391$`functional_ratio` - mean(nigeria_sf26391$`functional_ratio`)     
+```
+
+```{r}
+C_mI <- localMI[,1] - mean(localMI[,1])    
+```
+
+```{r}
+signif <- 0.05       
+```
+
+```{r}
+quadrant[DV >0 & C_mI>0] <- 4      
+quadrant[DV <0 & C_mI<0] <- 1      
+quadrant[DV <0 & C_mI>0] <- 2
+quadrant[DV >0 & C_mI<0] <- 3
+```
+
+```{r}
+quadrant[localMI[,5]>signif] <- 0
+```
+
+```{r}
+quadrant <- vector(mode="numeric",length=nrow(localMI))
+DV <- nigeria_sf26391$`functional_ratio` - mean(nigeria_sf26391$`functional_ratio`)     
+C_mI <- localMI[,1] - mean(localMI[,1])    
+signif <- 0.05       
+quadrant[DV >0 & C_mI>0] <- 4      
+quadrant[DV <0 & C_mI<0] <- 1      
+quadrant[DV <0 & C_mI>0] <- 2
+quadrant[DV >0 & C_mI<0] <- 3
+quadrant[localMI[,5]>signif] <- 0
+```
+
+### 8.4 Plotting LISA map
+
+```{r}
+nigeria_sf26391.localMI$quadrant <- quadrant
+colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
+clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+tm_shape(nigeria_sf26391.localMI) +
+  tm_fill(col = "quadrant", 
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant)))+1], 
+          labels = clusters[c(sort(unique(quadrant)))+1],
+          popup.vars = c("")) +
+  tm_view(set.zoom.limits = c(11,17)) +
+  tm_borders(alpha=0.5)
+```
+
+```{r}
+funtionWater <- qtm(nigeria_sf26391, "functional_ratio")
+
+nigeria_sf26391.localMI$quadrant <- quadrant
+colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
+clusters <- c("insignificant", "low-low", "low-high", "high-low", "high-high")
+
+LISAmap <- tm_shape(nigeria_sf26391.localMI) +
+  tm_fill(col = "quadrant", 
+          style = "cat", 
+          palette = colors[c(sort(unique(quadrant)))+1], 
+          labels = clusters[c(sort(unique(quadrant)))+1],
+          popup.vars = c("")) +
+  tm_view(set.zoom.limits = c(11,17)) +
+  tm_borders(alpha=0.5)
+
+tmap_arrange(funtionWater, LISAmap, asp=1, ncol=2)
+```
+
+## 9 Hot Spot Area Analysis
+
+### 9.1 Deriving the centroid
+
+```{r}
+longitude <- map_dbl(nigeria_sf26391$geometry, ~st_centroid(.x)[[1]])
+```
+
+```{r}
+latitude<- map_dbl(nigeria_sf26391$geometry, ~st_centroid(.x)[[2]])
+```
+
+```{r}
+coords <- cbind(longitude, latitude)
+```
+
+### 9.2 Determine the cut-off distance
+
+```{r}
+#coords <- coordinates(nigeria_sf26391)
+k1 <- knn2nb(knearneigh(coords))
+k1dists <- unlist(nbdists(k1, coords, longlat = TRUE))
+summary(k1dists)
+```
+
+The summary report shows that the largest first nearest neighbour distance is 19632, so using this as the upper threshold gives certainty that all units will have at least one neighbour.
+
+### 9.3 Computing fixed distance weight matrix
+
+```{r}
+wm_d19632 <- dnearneigh(coords, 0, 19632, longlat = TRUE)
+wm_d19632
+```
+
+```{r}
+wm619632_lw <- nb2listw(wm_d19632, style = 'B')
+summary(wm619632_lw)
+```
+
+### 9.4 Computing adaptive distance weight matrix
+
+```{r}
+knn <- knn2nb(knearneigh(coords, k=8))
+knn
+```
+
+```{r}
+knn_lw <- nb2listw(knn, style = 'B')
+summary(knn_lw)
+```
+
+## 10 Computing Gi statistics
+
+### 10.1 Gi statistic using fixed distance
+
+```{r}
+fips <- order(nigeria_sf26391$shapeName)
+gi.fixed <- localG(nigeria_sf26391$`functional_ratio`, wm619632_lw)
+gi.fixed
+```
+
+```{r}
+nigeria.gi <- cbind(nigeria_sf26391, as.matrix(gi.fixed)) %>%
+  rename(gstat_fixed = as.matrix.gi.fixed.)
+```
+
+### 10.2 Mapping Gi values with fixed distance weights
+
+```{r}
+funtionWater <- qtm(nigeria_sf26391, "functional_ratio")
+
+Gimap <-tm_shape(nigeria.gi) +
+  tm_fill(col = "gstat_fixed", 
+          style = "pretty",
+          palette="-RdBu",
+          title = "local Gi") +
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(funtionWater, Gimap, asp=1, ncol=2)
+```
+
+### 10.3 Gi statistics using adaptive distance
+
+```{r}
+fips <- order(nigeria_sf26391$shapeName)
+gi.adaptive <- localG(nigeria_sf26391$`functional_ratio`, knn_lw)
+nigeria.gi <- cbind(nigeria_sf26391, as.matrix(gi.adaptive)) %>%
+  rename(gstat_adaptive = as.matrix.gi.adaptive.)
+```
+
+### 10.4 Mapping Gi values with adaptive distance weights
+
+```{r}
+funtionWater<- qtm(nigeria_sf26391, "functional_ratio")
+
+Gimap <- tm_shape(nigeria.gi) + 
+  tm_fill(col = "gstat_adaptive", 
+          style = "pretty", 
+          palette="-RdBu", 
+          title = "local Gi") + 
+  tm_borders(alpha = 0.5)
+
+tmap_arrange(funtionWater, 
+             Gimap, 
+             asp=1, 
+             ncol=2)
+```
