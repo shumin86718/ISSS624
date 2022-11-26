@@ -147,6 +147,12 @@ bperm= moran.mc(hunan$GDPPC,
 bperm
 ```
 
+>
+>
+> Question: What statistical conclustion can you draw fro mthe output above?
+>
+> Clustered, observations tend to be similar
+
 #### 4.4.4.2 Visualising Monte Carlo Moran's I
 
 To examine the simulated Moran's I test staticstic in details, we can plot the distribution of the statistical values as a histogram by using below code.
