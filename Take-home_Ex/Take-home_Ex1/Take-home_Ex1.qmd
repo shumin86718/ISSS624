@@ -11,7 +11,29 @@ editor: visual
 
 ## 1 Overview
 
+Geospatial analytics hold tremendous potential to address complex problems facing society. In this study, you are tasked to apply appropriate global and local measures of spatial Association techniques to reveals the spatial patterns of Not Functional water points. For the purpose of this study, Nigeria will be used as the study country.
+
+The specific tasks of this take-home exercise are as follows:
+
+-   Using appropriate sf method, import the shapefile into R and save it in a simple feature data frame format. Note that there are three Projected Coordinate Systems of Nigeria, they are: EPSG: 26391, 26392, and 26303. You can use any one of them.
+
+-   Using appropriate tidyr and dplyr methods, derive the proportion of functional and non-functional water point at LGA level.
+
+-   Combining the geospatial and aspatial data frame into simple feature data frame.
+
+-   Performing outliers/clusters analysis by using appropriate local measures of spatial association methods.
+
+-   Performing hotspot areas analysis by using appropriate local measures of spatial association methods.
+
 ## 2 The Dataset
+
+**Apstial data**
+
+For the purpose of this assignment, data from [WPdx Global Data Repositories](https://www.waterpointdata.org/access-data/) will be used. There are two versions of the data. They are: WPdx-Basic and WPdx+. You are required to use WPdx+ data set.
+
+**Geospatial data**
+
+Nigeria Level-2 Administrative Boundary (also known as Local Government Area) polygon features GIS data will be used in this take-home exercise. The data can be downloaded either from The [Humanitarian Data Exchange](https://data.humdata.org/) portal or [geoBoundaries](https://www.geoboundaries.org/).
 
 ## 3 Setting Up Working Environment
 
@@ -25,8 +47,6 @@ pacman::p_load(sf, tmap, tidyverse, spdep,ggplot2, dplyr)
 
 ### 4.1 Loading up the Geospatial Data
 
-xxxx
-
 ```{r}
 nigeria_sf <- st_read(dsn = "data/geospatial", 
                  layer = "geoBoundaries-NGA-ADM2")
@@ -39,31 +59,33 @@ nigeria_data <- read_csv("data/aspatial/nigeria.csv")
 ```
 
 ```{r}
-#nigeria_data[rowSums(is.na(nigeria_data))!=0,]
+nigeria_data[rowSums(is.na(nigeria_data))!=0,]
 ```
 
 ```{r}
-#nigeria_data$`#status_clean`[is.na(nigeria_data$`#status_clean`)] <- "Unknown"
+nigeria_data$`#status_clean`[is.na(nigeria_data$`#status_clean`)] <- "Unknown"
 ```
 
 ```{r}
 functional <- nigeria_data %>%
   filter(`#status_clean` %in%  c("Functional", "Functional but not in use" , "Functional but needs repair")) %>%
-  select(`#lat_deg`, `#lon_deg`, `#water_source_category`, `#clean_adm2`, `#install_year`, `#status_clean`, `#distance_to_primary_road`, `#distance_to_secondary_road`, `#distance_to_tertiary_road`, `#distance_to_city`, `#distance_to_town`)
+  select(`#lat_deg`, `#lon_deg`, `#water_source_category`, `#clean_adm2`, `#status_clean`)
 ```
 
 ```{r}
 nonfunctional <- nigeria_data %>%
-  filter(`#status_clean` %in%  c("Abandoned/Decommissioned", "Abandoned" , "Non functional due to dry season", "Non functional due to dry season", "Non-Functional due to dry season")) %>%
-  select(`#lat_deg`, `#lon_deg`, `#water_source_category`, `#clean_adm2`, `#install_year`, `#status_clean`, `#distance_to_primary_road`, `#distance_to_secondary_road`, `#distance_to_tertiary_road`, `#distance_to_city`, `#distance_to_town`)
+  filter(`#status_clean` %in%  c("Abandoned/Decommissioned", "Abandoned", "Non functional due to dry season", "Non-Functional", "Non-Functional due to dry season")) %>%
+  select(`#lat_deg`, `#lon_deg`, `#water_source_category`, `#clean_adm2`, `#status_clean`)
+```
+
+```{r}
+unknown <- nigeria_data %>%
+  filter(`#status_clean` %in%  c("Unknown")) %>%
+  select(`#lat_deg`, `#lon_deg`, `#water_source_category`, `#clean_adm2`, `#status_clean`)
 ```
 
 ```{r}
 st_geometry(nigeria_sf)
-```
-
-```{r}
-glimpse(nigeria_sf)
 ```
 
 ```{r}
@@ -83,7 +105,94 @@ st_crs(nigeria_sf)
 ```
 
 ```{r}
-nigeria_sf26391 <- st_transform(nigeria_sf, crs = 26391)
+nigeria_data_sf <- st_as_sf(nigeria_data,
+                            coords = c("#lon_deg", "#lat_deg"),
+                            crs=4326) 
+
+```
+
+```{r}
+functional <- st_as_sf(functional,
+                            coords = c("#lon_deg", "#lat_deg"),
+                            crs=4326) 
+
+```
+
+```{r}
+nonfunctional <- st_as_sf(nonfunctional,
+                            coords = c("#lon_deg", "#lat_deg"),
+                            crs=4326)
+  
+```
+
+```{r}
+unknown <- st_as_sf(unknown,
+                            coords = c("#lon_deg", "#lat_deg"),
+                            crs=4326)
+```
+
+```{r}
+nigeria_sf$WaterpointCount <- lengths(st_intersects(nigeria_sf, nigeria_data_sf))
+```
+
+```{r}
+nigeria_sf$functional<- lengths(st_intersects(nigeria_sf, functional))
+```
+
+```{r}
+nigeria_sf$nonfunctional <- lengths(st_intersects(nigeria_sf, nonfunctional))
+```
+
+```{r}
+nigeria_sf$unknown <- lengths(st_intersects(nigeria_sf, unknown))
+```
+
+```{r}
+summary(nigeria_sf$WaterpointCount)
+```
+
+```{r}
+top_n(nigeria_sf, 1, WaterpointCount)
+```
+
+```{r}
+summary(nigeria_sf$functional)
+```
+
+```{r}
+summary(nigeria_sf$nonfunctional)
+```
+
+```{r}
+top_n(nigeria_sf, 1, functional)
+```
+
+```{r}
+top_n(nigeria_sf, 1, nonfunctional)
+```
+
+```{r}
+nigeria_sf <- nigeria_sf %>%
+  mutate(`functional_ratio` = `functional`/`WaterpointCount`)
+```
+
+```{r}
+nigeria_sf <- nigeria_sf %>%
+  mutate(`nonfunctional_ratio` = `nonfunctional`/`WaterpointCount`)
+```
+
+```{r}
+#nigeria_sf$`functional_ratio`
+```
+
+```{r}
+#nigeria_sf$`nonfunctional_ratio`
+```
+
+```{r}
+nigeria_sf26391 <- st_transform(nigeria_sf,
+
+crs = 26391)
 ```
 
 ```{r}
@@ -91,84 +200,9 @@ st_crs(nigeria_sf26391)
 ```
 
 ```{r}
-nigeria_data_sf <- st_as_sf(nigeria_data,
-                            coords = c("#lon_deg", "#lat_deg"),
-                            crs=4326) %>%
-  st_transform(crs = 26391)
-```
-
-```{r}
-functional <- st_as_sf(functional,
-                            coords = c("#lon_deg", "#lat_deg"),
-                            crs=4326) %>%
-  st_transform(crs = 26391)
-```
-
-```{r}
-nonfunctional <- st_as_sf(nonfunctional,
-                            coords = c("#lon_deg", "#lat_deg"),
-                            crs=4326) %>%
-  st_transform(crs = 26391)
-```
-
-```{r}
-nigeria_sf26391$`Waterpoint Count`<- lengths(st_intersects(nigeria_sf26391, nigeria_data_sf))
-```
-
-```{r}
-nigeria_sf26391$`functional Waterpoint Count`<- lengths(st_intersects(nigeria_sf26391, functional))
-```
-
-```{r}
-nigeria_sf26391$`nonfunctional Waterpoint Count`<- lengths(st_intersects(nigeria_sf26391, nonfunctional))
-```
-
-```{r}
-#summary(nigeria_sf26391$`Waterpoint Count`)
-```
-
-```{r}
-#top_n(nigeria_sf26391, 1, `Waterpoint Count`)
-```
-
-```{r}
-#summary(nigeria_sf26391$`functional Waterpoint Count`)
-```
-
-```{r}
-#summary(nigeria_sf26391$`nonfunctional Waterpoint Count`)
-```
-
-```{r}
-#top_n(nigeria_sf26391, 1, `functional Waterpoint Count`)
-```
-
-```{r}
-#top_n(nigeria_sf26391, 1, `nonfunctional Waterpoint Count`)
-```
-
-```{r}
-nigeria_sf26391 <- nigeria_sf26391 %>%
-  mutate(`functional_ratio` = `functional Waterpoint Count`/`Waterpoint Count`)
-```
-
-```{r}
-nigeria_sf26391 <- nigeria_sf26391 %>%
-  mutate(`nonfunctional_ratio` = `nonfunctional Waterpoint Count`/`Waterpoint Count`)
-```
-
-```{r}
-#nigeria_sf26391$`functional_ratio`
-```
-
-```{r}
-#nigeria_sf26391$`nonfunctional_ratio`
-```
-
-```{r}
 #tmap_mode("plot")
 #qtm(nigeria_sf26391, 
-#    fill = "functional_ratio")
+   # fill = "functional_ratio")
 ```
 
 ```{r}
@@ -510,8 +544,8 @@ signif <- 0.05
 
 ```{r}
 quadrant[DV >0 & C_mI>0] <- 4      
-quadrant[DV <0 & C_mI<0] <- 1      
-quadrant[DV <0 & C_mI>0] <- 2
+quadrant[DV <0 & C_mI<0] <- 2      
+quadrant[DV <0 & C_mI>0] <- 1
 quadrant[DV >0 & C_mI<0] <- 3
 ```
 
@@ -525,8 +559,8 @@ DV <- nigeria_sf26391$`functional_ratio` - mean(nigeria_sf26391$`functional_rati
 C_mI <- localMI[,1] - mean(localMI[,1])    
 signif <- 0.05       
 quadrant[DV >0 & C_mI>0] <- 4      
-quadrant[DV <0 & C_mI<0] <- 1      
-quadrant[DV <0 & C_mI>0] <- 2
+quadrant[DV <0 & C_mI<0] <- 2      
+quadrant[DV <0 & C_mI>0] <- 1
 quadrant[DV >0 & C_mI<0] <- 3
 quadrant[localMI[,5]>signif] <- 0
 ```
