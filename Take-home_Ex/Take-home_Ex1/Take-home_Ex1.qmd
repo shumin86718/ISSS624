@@ -182,6 +182,11 @@ nigeria_sf <- nigeria_sf %>%
 ```
 
 ```{r}
+nigeria_sf <- nigeria_sf %>%
+  mutate(`unknown_ratio` = `unknown`/`WaterpointCount`)
+```
+
+```{r}
 #nigeria_sf$`functional_ratio`
 ```
 
@@ -232,6 +237,26 @@ tm_shape(nigeria_sf26391)+
           palette = "Greens",
           title = "nonfunctional waterpoint ratio") +
   tm_layout(main.title = "Distribution of nonFunctional Water Point Ratio by L2 LGA",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar() +
+  tm_grid(alpha =0.2) +
+  tm_credits("Source: Level 2 Local Government Area from GeoBoundaries\n and Water Point data from WPdx Global Data Repositories", 
+             position = c("left", "bottom"))
+```
+
+```{r}
+tm_shape(nigeria_sf26391)+
+  tm_fill("unknown_ratio", 
+          style = "quantile", 
+          palette = "Greens",
+          title = "unknown waterpoint ratio") +
+  tm_layout(main.title = "Distribution of unknown Water Point Ratio by L2 LGA",
             main.title.position = "center",
             main.title.size = 1,
             legend.height = 0.45, 
@@ -318,10 +343,10 @@ print(rswm_q,zero.policy = TRUE)
 
 ### 6.2 Global Spatial Autocorrelation: Moran's I
 
-#### 6.2.1 Moron's I test for functional waterpoint count
+#### 6.2.1 Moron's I test for nonfunctional waterpoint count
 
 ```{r}
-moran.test(nigeria_sf26391$`functional_ratio`, 
+moran.test(nigeria_sf26391$`nonfunctional_ratio`, 
            listw=rswm_q, 
            zero.policy = TRUE, 
            na.action=na.omit)
@@ -331,7 +356,7 @@ moran.test(nigeria_sf26391$`functional_ratio`,
 
 ```{r}
 set.seed(1234)
-bperm_fun= moran.mc(nigeria_sf26391$`functional_ratio`, 
+bperm_fun= moran.mc(nigeria_sf26391$`nonfunctional_ratio`, 
                 listw=rswm_q, 
                 nsim=999, 
                 zero.policy = TRUE, 
@@ -365,7 +390,7 @@ abline(v=0,
 ### 6.3 Global Spatial Autocorrelation: Geary's
 
 ```{r}
-geary.test(nigeria_sf26391$`functional_ratio`, 
+geary.test(nigeria_sf26391$`nonfunctional_ratio`, 
            listw=rswm_q, zero.policy = TRUE)
 ```
 
@@ -373,7 +398,7 @@ geary.test(nigeria_sf26391$`functional_ratio`,
 
 ```{r}
 set.seed(1234)
-bperm_fun=geary.mc(nigeria_sf26391$`functional_ratio`, 
+bperm_fun=geary.mc(nigeria_sf26391$`nonfunctional_ratio`, 
                listw=rswm_q, 
                nsim=999,
                zero.policy = TRUE)
@@ -405,7 +430,7 @@ abline(v=1, col="red")
 
 ```{r}
 MI_corr <- sp.correlogram(wm_q_nigeria_sf26391, 
-                          nigeria_sf26391$`functional_ratio`, 
+                          nigeria_sf26391$`nonfunctional_ratio`, 
                           order=6, 
                           method="I", 
                           style="W",
@@ -421,7 +446,7 @@ print(MI_corr)
 
 ```{r}
 GC_corr <- sp.correlogram(wm_q_nigeria_sf26391, 
-                          nigeria_sf26391$`functional_ratio`, 
+                          nigeria_sf26391$`nonfunctional_ratio`, 
                           order=6, 
                           method="C", 
                           style="W",
@@ -442,7 +467,7 @@ fips <- order(nigeria_sf26391$shapeName)
 ```
 
 ```{r}
-localMI <- localmoran(nigeria_sf26391$`functional_ratio`, rswm_q, zero.policy = TRUE)
+localMI <- localmoran(nigeria_sf26391$`nonfunctional_ratio`, rswm_q, zero.policy = TRUE)
 head(localMI)
 ```
 
@@ -505,23 +530,23 @@ tmap_arrange(localMI.map, pvalue.map, asp=1, ncol=2)
 ### 8.1 Plotting Moran scatterplot
 
 ```{r}
-nci <- moran.plot(nigeria_sf26391$`functional_ratio`, rswm_q, zero.policy = TRUE,
+nci <- moran.plot(nigeria_sf26391$`nonfunctional_ratio`, rswm_q, zero.policy = TRUE,
                   labels=as.character(nigeria_sf26391$`shapeName`), 
-                  xlab="functional waterpoint ratio", 
-                  ylab="Spatially Lag z-functional waterpoint ratio")
+                  xlab="nonfunctional waterpoint ratio", 
+                  ylab="Spatially Lag z-nonfunctional waterpoint ratio")
 ```
 
 ### 8.2 Plotting Moran sactterplot with standardised variable
 
 ```{r}
-nigeria_sf26391$Z.functional_ratio <- scale(nigeria_sf26391$functional_ratio) %>% as.vector 
+nigeria_sf26391$Z.nonfunctional_ratio <- scale(nigeria_sf26391$nonfunctional_ratio) %>% as.vector 
 ```
 
 ```{r}
-nci2 <- moran.plot(nigeria_sf26391$Z.functional_ratio, rswm_q,zero.policy = TRUE,
+nci2 <- moran.plot(nigeria_sf26391$Z.nonfunctional_ratio, rswm_q,zero.policy = TRUE,
                    labels=as.character(nigeria_sf26391$`shapeName`),
-                   xlab="z-functional waterpoint ratio", 
-                   ylab="Spatially Lag z-functional waterpoint ratio")
+                   xlab="z-nonfunctional waterpoint ratio", 
+                   ylab="Spatially Lag z-nonfunctional waterpoint ratio")
 ```
 
 ### 8.3 Preparing LISA map classes
@@ -531,7 +556,7 @@ quadrant <- vector(mode="numeric",length=nrow(localMI))
 ```
 
 ```{r}
-DV <- nigeria_sf26391$`functional_ratio` - mean(nigeria_sf26391$`functional_ratio`)     
+DV <- nigeria_sf26391$`nonfunctional_ratio` - mean(nigeria_sf26391$`nonfunctional_ratio`)     
 ```
 
 ```{r}
@@ -555,7 +580,7 @@ quadrant[localMI[,5]>signif] <- 0
 
 ```{r}
 quadrant <- vector(mode="numeric",length=nrow(localMI))
-DV <- nigeria_sf26391$`functional_ratio` - mean(nigeria_sf26391$`functional_ratio`)     
+DV <- nigeria_sf26391$`nonfunctional_ratio` - mean(nigeria_sf26391$`nonfunctional_ratio`)     
 C_mI <- localMI[,1] - mean(localMI[,1])    
 signif <- 0.05       
 quadrant[DV >0 & C_mI>0] <- 4      
@@ -583,7 +608,7 @@ tm_shape(nigeria_sf26391.localMI) +
 ```
 
 ```{r}
-funtionWater <- qtm(nigeria_sf26391, "functional_ratio")
+nonfuntionWater <- qtm(nigeria_sf26391, "nonfunctional_ratio")
 
 nigeria_sf26391.localMI$quadrant <- quadrant
 colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
@@ -598,7 +623,7 @@ LISAmap <- tm_shape(nigeria_sf26391.localMI) +
   tm_view(set.zoom.limits = c(11,17)) +
   tm_borders(alpha=0.5)
 
-tmap_arrange(funtionWater, LISAmap, asp=1, ncol=2)
+tmap_arrange(nonfuntionWater, LISAmap, asp=1, ncol=2)
 ```
 
 ## 9 Hot Spot Area Analysis
@@ -631,13 +656,13 @@ The summary report shows that the largest first nearest neighbour distance is 19
 ### 9.3 Computing fixed distance weight matrix
 
 ```{r}
-wm_d19632 <- dnearneigh(coords, 0, 19632, longlat = TRUE)
-wm_d19632
+wm_d19633 <- dnearneigh(coords, 0, 19633, longlat = TRUE)
+wm_d19633
 ```
 
 ```{r}
-wm619632_lw <- nb2listw(wm_d19632, style = 'B')
-summary(wm619632_lw)
+wm619633_lw <- nb2listw(wm_d19633, style = 'B')
+summary(wm619633_lw)
 ```
 
 ### 9.4 Computing adaptive distance weight matrix
@@ -658,7 +683,7 @@ summary(knn_lw)
 
 ```{r}
 fips <- order(nigeria_sf26391$shapeName)
-gi.fixed <- localG(nigeria_sf26391$`functional_ratio`, wm619632_lw)
+gi.fixed <- localG(nigeria_sf26391$`nonfunctional_ratio`, wm619633_lw)
 gi.fixed
 ```
 
@@ -670,7 +695,7 @@ nigeria.gi <- cbind(nigeria_sf26391, as.matrix(gi.fixed)) %>%
 ### 10.2 Mapping Gi values with fixed distance weights
 
 ```{r}
-funtionWater <- qtm(nigeria_sf26391, "functional_ratio")
+nonfuntionWater <- qtm(nigeria_sf26391, "nonfunctional_ratio")
 
 Gimap <-tm_shape(nigeria.gi) +
   tm_fill(col = "gstat_fixed", 
@@ -679,14 +704,14 @@ Gimap <-tm_shape(nigeria.gi) +
           title = "local Gi") +
   tm_borders(alpha = 0.5)
 
-tmap_arrange(funtionWater, Gimap, asp=1, ncol=2)
+tmap_arrange(nonfuntionWater, Gimap, asp=1, ncol=2)
 ```
 
 ### 10.3 Gi statistics using adaptive distance
 
 ```{r}
 fips <- order(nigeria_sf26391$shapeName)
-gi.adaptive <- localG(nigeria_sf26391$`functional_ratio`, knn_lw)
+gi.adaptive <- localG(nigeria_sf26391$`nonfunctional_ratio`, knn_lw)
 nigeria.gi <- cbind(nigeria_sf26391, as.matrix(gi.adaptive)) %>%
   rename(gstat_adaptive = as.matrix.gi.adaptive.)
 ```
@@ -694,7 +719,7 @@ nigeria.gi <- cbind(nigeria_sf26391, as.matrix(gi.adaptive)) %>%
 ### 10.4 Mapping Gi values with adaptive distance weights
 
 ```{r}
-funtionWater<- qtm(nigeria_sf26391, "functional_ratio")
+nonfuntionWater<- qtm(nigeria_sf26391, "nonfunctional_ratio")
 
 Gimap <- tm_shape(nigeria.gi) + 
   tm_fill(col = "gstat_adaptive", 
@@ -703,7 +728,7 @@ Gimap <- tm_shape(nigeria.gi) +
           title = "local Gi") + 
   tm_borders(alpha = 0.5)
 
-tmap_arrange(funtionWater, 
+tmap_arrange(nonfuntionWater, 
              Gimap, 
              asp=1, 
              ncol=2)
