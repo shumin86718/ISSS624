@@ -85,22 +85,6 @@ unknown <- nigeria_data %>%
 ```
 
 ```{r}
-st_geometry(nigeria_sf)
-```
-
-```{r}
-#head(nigeria_sf, n=5)  
-```
-
-```{r}
-#plot(nigeria_sf)
-```
-
-```{r}
-#plot(st_geometry(nigeria_sf))
-```
-
-```{r}
 st_crs(nigeria_sf)
 ```
 
@@ -148,30 +132,6 @@ nigeria_sf$unknown <- lengths(st_intersects(nigeria_sf, unknown))
 ```
 
 ```{r}
-summary(nigeria_sf$WaterpointCount)
-```
-
-```{r}
-top_n(nigeria_sf, 1, WaterpointCount)
-```
-
-```{r}
-summary(nigeria_sf$functional)
-```
-
-```{r}
-summary(nigeria_sf$nonfunctional)
-```
-
-```{r}
-top_n(nigeria_sf, 1, functional)
-```
-
-```{r}
-top_n(nigeria_sf, 1, nonfunctional)
-```
-
-```{r}
 nigeria_sf <- nigeria_sf %>%
   mutate(`functional_ratio` = `functional`/`WaterpointCount`)
 ```
@@ -187,14 +147,6 @@ nigeria_sf <- nigeria_sf %>%
 ```
 
 ```{r}
-#nigeria_sf$`functional_ratio`
-```
-
-```{r}
-#nigeria_sf$`nonfunctional_ratio`
-```
-
-```{r}
 nigeria_sf26391 <- st_transform(nigeria_sf,
 
 crs = 26391)
@@ -202,12 +154,6 @@ crs = 26391)
 
 ```{r}
 st_crs(nigeria_sf26391)
-```
-
-```{r}
-#tmap_mode("plot")
-#qtm(nigeria_sf26391, 
-   # fill = "functional_ratio")
 ```
 
 ```{r}
@@ -254,7 +200,7 @@ tm_shape(nigeria_sf26391)+
 tm_shape(nigeria_sf26391)+
   tm_fill("unknown_ratio", 
           style = "quantile", 
-          palette = "Greens",
+          palette = "Oranges",
           title = "unknown waterpoint ratio") +
   tm_layout(main.title = "Distribution of unknown Water Point Ratio by L2 LGA",
             main.title.position = "center",
@@ -337,8 +283,16 @@ nigeria_sf26391$`nonfunctional_ratio`[is.na(nigeria_sf26391$`nonfunctional_ratio
 ```
 
 ```{r}
+nigeria_sf26391$`unknown_ratio`[is.na(nigeria_sf26391$`unknown_ratio`)] <- 0
+```
+
+```{r}
+set.ZeroPolicyOption(TRUE)
+```
+
+```{r}
 rswm_q <- nb2listw(wm_q_nigeria_sf26391, style="W", zero.policy = TRUE)
-print(rswm_q,zero.policy = TRUE)
+rswm_q
 ```
 
 ### 6.2 Global Spatial Autocorrelation: Moran's I
@@ -347,8 +301,7 @@ print(rswm_q,zero.policy = TRUE)
 
 ```{r}
 moran.test(nigeria_sf26391$`nonfunctional_ratio`, 
-           listw=rswm_q, 
-           zero.policy = TRUE, 
+           listw=rswm_q,
            na.action=na.omit)
 ```
 
@@ -356,30 +309,29 @@ moran.test(nigeria_sf26391$`nonfunctional_ratio`,
 
 ```{r}
 set.seed(1234)
-bperm_fun= moran.mc(nigeria_sf26391$`nonfunctional_ratio`, 
+bperm_nonfun= moran.mc(nigeria_sf26391$`nonfunctional_ratio`, 
                 listw=rswm_q, 
-                nsim=999, 
-                zero.policy = TRUE, 
+                nsim=999,
                 na.action=na.omit)
-bperm_fun
+bperm_nonfun
 ```
 
 **Visualising Monte Carlo Moran's I**
 
 ```{r}
-mean(bperm_fun$res[1:999])
+mean(bperm_nonfun$res[1:999])
 ```
 
 ```{r}
-var(bperm_fun$res[1:999])
+var(bperm_nonfun$res[1:999])
 ```
 
 ```{r}
-summary(bperm_fun$res[1:999])
+summary(bperm_nonfun$res[1:999])
 ```
 
 ```{r}
-hist(bperm_fun$res, 
+hist(bperm_nonfun$res, 
      freq=TRUE, 
      breaks=50, 
      xlab="Simulated Moran's I")
@@ -391,36 +343,35 @@ abline(v=0,
 
 ```{r}
 geary.test(nigeria_sf26391$`nonfunctional_ratio`, 
-           listw=rswm_q, zero.policy = TRUE)
+           listw=rswm_q)
 ```
 
 **Computing Monte Carlo Geary's C**
 
 ```{r}
 set.seed(1234)
-bperm_fun=geary.mc(nigeria_sf26391$`nonfunctional_ratio`, 
+bperm_nonfun=geary.mc(nigeria_sf26391$`nonfunctional_ratio`, 
                listw=rswm_q, 
-               nsim=999,
-               zero.policy = TRUE)
-bperm_fun
+               nsim=999)
+bperm_nonfun
 ```
 
 **Visualising the Monte Carlo Geary's C**
 
 ```{r}
-mean(bperm_fun$res[1:999])
+mean(bperm_nonfun$res[1:999])
 ```
 
 ```{r}
-var(bperm_fun$res[1:999])
+var(bperm_nonfun$res[1:999])
 ```
 
 ```{r}
-summary(bperm_fun$res[1:999])
+summary(bperm_nonfun$res[1:999])
 ```
 
 ```{r}
-hist(bperm_fun$res, freq=TRUE, breaks=50, xlab="Simulated Geary c")
+hist(bperm_nonfun$res, freq=TRUE, breaks=50, xlab="Simulated Geary c")
 abline(v=1, col="red") 
 ```
 
@@ -433,8 +384,7 @@ MI_corr <- sp.correlogram(wm_q_nigeria_sf26391,
                           nigeria_sf26391$`nonfunctional_ratio`, 
                           order=6, 
                           method="I", 
-                          style="W",
-                          zero.policy = TRUE)
+                          style="W")
 plot(MI_corr)
 ```
 
@@ -449,8 +399,7 @@ GC_corr <- sp.correlogram(wm_q_nigeria_sf26391,
                           nigeria_sf26391$`nonfunctional_ratio`, 
                           order=6, 
                           method="C", 
-                          style="W",
-                          zero.policy = TRUE)
+                          style="W")
 plot(GC_corr)
 ```
 
@@ -467,14 +416,8 @@ fips <- order(nigeria_sf26391$shapeName)
 ```
 
 ```{r}
-localMI <- localmoran(nigeria_sf26391$`nonfunctional_ratio`, rswm_q, zero.policy = TRUE)
+localMI <- localmoran(nigeria_sf26391$`nonfunctional_ratio`, rswm_q)
 head(localMI)
-```
-
-```{r}
-df = data.frame(localMI[fips,])
-rownames(df) = make.names(nigeria_sf26391$shapeName, unique=TRUE)
-printCoefmat(df, check.names=FALSE)
 ```
 
 **Mapping the local Moran's I**
@@ -530,8 +473,8 @@ tmap_arrange(localMI.map, pvalue.map, asp=1, ncol=2)
 ### 8.1 Plotting Moran scatterplot
 
 ```{r}
-nci <- moran.plot(nigeria_sf26391$`nonfunctional_ratio`, rswm_q, zero.policy = TRUE,
-                  labels=as.character(nigeria_sf26391$`shapeName`), 
+nci <- moran.plot(nigeria_sf26391$`nonfunctional_ratio`, rswm_q,
+                  labels=as.character(nigeria_sf26391$shapeName), 
                   xlab="nonfunctional waterpoint ratio", 
                   ylab="Spatially Lag z-nonfunctional waterpoint ratio")
 ```
@@ -539,12 +482,12 @@ nci <- moran.plot(nigeria_sf26391$`nonfunctional_ratio`, rswm_q, zero.policy = T
 ### 8.2 Plotting Moran sactterplot with standardised variable
 
 ```{r}
-nigeria_sf26391$Z.nonfunctional_ratio <- scale(nigeria_sf26391$nonfunctional_ratio) %>% as.vector 
+nigeria_sf26391$Z.nonfunctional_ratio <- scale(nigeria_sf26391$`nonfunctional_ratio`) %>% as.vector 
 ```
 
 ```{r}
-nci2 <- moran.plot(nigeria_sf26391$Z.nonfunctional_ratio, rswm_q,zero.policy = TRUE,
-                   labels=as.character(nigeria_sf26391$`shapeName`),
+nci2 <- moran.plot(nigeria_sf26391$Z.nonfunctional_ratio, rswm_q,
+                   labels=as.character(nigeria_sf26391$shapeName),
                    xlab="z-nonfunctional waterpoint ratio", 
                    ylab="Spatially Lag z-nonfunctional waterpoint ratio")
 ```
@@ -556,11 +499,12 @@ quadrant <- vector(mode="numeric",length=nrow(localMI))
 ```
 
 ```{r}
-DV <- nigeria_sf26391$`nonfunctional_ratio` - mean(nigeria_sf26391$`nonfunctional_ratio`)     
+nigeria_sf26391$lag_nonfunctional_points <- lag.listw(rswm_q, nigeria_sf26391$`nonfunctional_ratio`)
+DV <- nigeria_sf26391$lag_nonfunctional_points - mean(nigeria_sf26391$lag_nonfunctional_points)     
 ```
 
 ```{r}
-C_mI <- localMI[,1] - mean(localMI[,1])    
+LM_I <- localMI[,1] - mean(localMI[,1])    
 ```
 
 ```{r}
@@ -568,25 +512,13 @@ signif <- 0.05
 ```
 
 ```{r}
-quadrant[DV >0 & C_mI>0] <- 4      
-quadrant[DV <0 & C_mI<0] <- 2      
-quadrant[DV <0 & C_mI>0] <- 1
-quadrant[DV >0 & C_mI<0] <- 3
+quadrant[DV <0 & LM_I>0] <- 1
+quadrant[DV >0 & LM_I<0] <- 2
+quadrant[DV <0 & LM_I<0] <- 3  
+quadrant[DV >0 & LM_I>0] <- 4   
 ```
 
 ```{r}
-quadrant[localMI[,5]>signif] <- 0
-```
-
-```{r}
-quadrant <- vector(mode="numeric",length=nrow(localMI))
-DV <- nigeria_sf26391$`nonfunctional_ratio` - mean(nigeria_sf26391$`nonfunctional_ratio`)     
-C_mI <- localMI[,1] - mean(localMI[,1])    
-signif <- 0.05       
-quadrant[DV >0 & C_mI>0] <- 4      
-quadrant[DV <0 & C_mI<0] <- 2      
-quadrant[DV <0 & C_mI>0] <- 1
-quadrant[DV >0 & C_mI<0] <- 3
 quadrant[localMI[,5]>signif] <- 0
 ```
 
@@ -608,7 +540,7 @@ tm_shape(nigeria_sf26391.localMI) +
 ```
 
 ```{r}
-nonfuntionWater <- qtm(nigeria_sf26391, "nonfunctional_ratio")
+nonfuntion <- qtm(nigeria_sf26391, "nonfunctional_ratio")
 
 nigeria_sf26391.localMI$quadrant <- quadrant
 colors <- c("#ffffff", "#2c7bb6", "#abd9e9", "#fdae61", "#d7191c")
@@ -623,7 +555,11 @@ LISAmap <- tm_shape(nigeria_sf26391.localMI) +
   tm_view(set.zoom.limits = c(11,17)) +
   tm_borders(alpha=0.5)
 
-tmap_arrange(nonfuntionWater, LISAmap, asp=1, ncol=2)
+tmap_arrange(nonfuntion, LISAmap, asp=1, ncol=2)
+```
+
+```{r}
+tmap_arrange(localMI.map, pvalue.map, ncol=2)
 ```
 
 ## 9 Hot Spot Area Analysis
@@ -695,7 +631,7 @@ nigeria.gi <- cbind(nigeria_sf26391, as.matrix(gi.fixed)) %>%
 ### 10.2 Mapping Gi values with fixed distance weights
 
 ```{r}
-nonfuntionWater <- qtm(nigeria_sf26391, "nonfunctional_ratio")
+nonfuntion <- qtm(nigeria_sf26391, "nonfunctional_ratio")
 
 Gimap <-tm_shape(nigeria.gi) +
   tm_fill(col = "gstat_fixed", 
@@ -704,7 +640,7 @@ Gimap <-tm_shape(nigeria.gi) +
           title = "local Gi") +
   tm_borders(alpha = 0.5)
 
-tmap_arrange(nonfuntionWater, Gimap, asp=1, ncol=2)
+tmap_arrange(nonfuntion, Gimap, asp=1, ncol=2)
 ```
 
 ### 10.3 Gi statistics using adaptive distance
@@ -712,23 +648,23 @@ tmap_arrange(nonfuntionWater, Gimap, asp=1, ncol=2)
 ```{r}
 fips <- order(nigeria_sf26391$shapeName)
 gi.adaptive <- localG(nigeria_sf26391$`nonfunctional_ratio`, knn_lw)
-nigeria.gi <- cbind(nigeria_sf26391, as.matrix(gi.adaptive)) %>%
+nigeria_sf26391.gi <- cbind(nigeria_sf26391, as.matrix(gi.adaptive)) %>%
   rename(gstat_adaptive = as.matrix.gi.adaptive.)
 ```
 
 ### 10.4 Mapping Gi values with adaptive distance weights
 
 ```{r}
-nonfuntionWater<- qtm(nigeria_sf26391, "nonfunctional_ratio")
+nonfuntion<- qtm(nigeria_sf26391, "nonfunctional_ratio")
 
-Gimap <- tm_shape(nigeria.gi) + 
+Gimap <- tm_shape(nigeria_sf26391.gi) + 
   tm_fill(col = "gstat_adaptive", 
           style = "pretty", 
           palette="-RdBu", 
           title = "local Gi") + 
   tm_borders(alpha = 0.5)
 
-tmap_arrange(nonfuntionWater, 
+tmap_arrange(nonfuntion, 
              Gimap, 
              asp=1, 
              ncol=2)
