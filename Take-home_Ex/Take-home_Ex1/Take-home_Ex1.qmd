@@ -426,7 +426,7 @@ Spatial correlograms are used to examine patterns of spatial autocorrelation in 
 
 #### 6.4.1 Compute Moran's I correlogram
 
-In the code chunk below, sp.correlogram() of spdep package is used to compute a 6-lag spatial correlogram of GDPPC. The global spatial autocorrelation used in Moran's I. The plot() of base Graph is then used to plot the output.
+In the code chunk below, sp.correlogram() of spdep package is used to compute a 6-lag spatial correlogram. The global spatial autocorrelation used in Moran's I. The plot() of base Graph is then used to plot the output.
 
 ```{r}
 MI_corr <- sp.correlogram(wm_d73, 
@@ -443,7 +443,7 @@ print(MI_corr)
 
 #### 6.4.2 Compute Geary's C correlogram and plot
 
-In the code chunk below, *sp.correlogram()* of **spdep** package is used to compute a 6-lag spatial correlogram of GDPPC. The global spatial autocorrelation used in Geary\'s C. The **plot()** of base Graph is then used to plot the output.
+In the code chunk below, *sp.correlogram()* of **spdep** package is used to compute a 6-lag spatial correlogram. The global spatial autocorrelation used in Geary's C. The **plot()** of base Graph is then used to plot the output.
 
 ```{r}
 GC_corr <- sp.correlogram(wm_d73, 
@@ -464,9 +464,9 @@ Local Indicators of Spatial Association or LISA are statistics that evaluate the
 
 ### 7.1 Computing local Moran's I
 
-To compute local Moran\'s I, the [*localmoran()*](https://r-spatial.github.io/spdep/reference/localmoran.html) function of **spdep** will be used. It computes *Ii* values, given a set of *zi* values and a listw object providing neighbour weighting information for the polygon associated with the zi values.
+To compute local Moran's I, the [*localmoran()*](https://r-spatial.github.io/spdep/reference/localmoran.html) function of **spdep** will be used. It computes *Ii* values, given a set of *zi* values and a listw object providing neighbour weighting information for the polygon associated with the zi values.
 
-The code chunks below are used to compute local Moran\'s I of nonfunctional water point ratio.
+The code chunks below are used to compute local Moran's I of nonfunctional water point ratio.
 
 ```{r}
 fips <- order(nigeria_sf26391$shapeName)
@@ -488,7 +488,7 @@ head(localMI_adp)
 
 *localmoran()* function returns a matrix of values whose columns are:
 
--   Ii: the local Moran\'s I statistics
+-   Ii: the local Moran's I statistics
 
 -   E.Ii: the expectation of local moran statistic under the randomisation hypothesis
 
@@ -500,7 +500,7 @@ head(localMI_adp)
 
 **Mapping the local Moran's I**
 
-Before mapping the local Moran\'s I map, it is wise to append the local Moran\'s I dataframe (i.e. localMI) onto hunan SpatialPolygonDataFrame. The code chunks below can be used to perform the task. T
+Before mapping the local Moran's I map, it is wise to append the local Moran's I dataframe (i.e. localMI) onto hunan SpatialPolygonDataFrame. The code chunks below can be used to perform the task. T
 
 ```{r}
 nigeria_sf26391.localMI_dw <- cbind(nigeria_sf26391,localMI_dw) %>%
@@ -512,8 +512,7 @@ nigeria_sf26391.localMI_adp <- cbind(nigeria_sf26391,localMI_adp) %>%
   rename(Pr.Ii = Pr.z....E.Ii..)
 ```
 
-**Mapping local Moran's I values**
-Using choropleth mapping functions of **tmap** package, we can plot the local Moran\'s I values by using the code chinks below.
+**Mapping local Moran's I values** Using choropleth mapping functions of **tmap** package, we can plot the local Moran's I values by using the code chinks below.
 
 ```{r}
 tm_shape(nigeria_sf26391.localMI_dw) +
@@ -537,7 +536,7 @@ tm_shape(nigeria_sf26391.localMI_adp) +
 
 The choropleth shows there is evidence for both positive and negative Ii values. However, it is useful to consider the p-values for each of these values, as consider above.
 
-The code chunks below produce a choropleth map of Moran\'s I p-values by using functions of **tmap** package.
+The code chunks below produce a choropleth map of Moran's I p-values by using functions of **tmap** package.
 
 ```{r}
 tm_shape(nigeria_sf26391.localMI_dw) +
@@ -559,7 +558,7 @@ tm_shape(nigeria_sf26391.localMI_adp) +
 
 **Mapping both local Moran's I values and p-values for fixed distance weighting**
 
-For effective interpretation, it is better to plot both the local Moran\'s I values map and its corresponding p-values map next to each other.
+For effective interpretation, it is better to plot both the local Moran's I values map and its corresponding p-values map next to each other.
 
 The code chunk below will be used to create such visualisation.
 
@@ -654,7 +653,7 @@ Next, derives the spatially lagged variable of interest and centers the spatiall
 DV <- scale(nigeria_sf26391.localMI_dw$`nonfunctional_ratio`)
 ```
 
-This is follow by centering the local Moran\'s around the mean.
+This is follow by centering the local Moran's around the mean.
 
 ```{r}
 LM_I <- localMI_dw[,1] - mean(localMI_dw[,1])    
@@ -696,7 +695,7 @@ tm_shape(nigeria_sf26391.localMI_dw) +
   tm_borders(alpha=0.5)
 ```
 
-For effective interpretation, it is better to plot both the local Moran\'s I values map and its corresponding p-values map next to each other.
+For effective interpretation, it is better to plot both the local Moran's I values map and its corresponding p-values map next to each other.
 
 The code chunk below will be used to create such visualisation.
 
@@ -784,6 +783,11 @@ LISAmap <- tm_shape(nigeria_sf26391.localMI_adp) +
 
 tmap_arrange(nonfuntion_adp, LISAmap, asp=1, ncol=2)
 ```
+### 8.7 LISA plot result
+
+For the distance based weighting method, both fixed distance and adaptive distance weighting seems to have similar High-High clusters at the south-west region for non-functional water point ratio.
+
+At the same time, we can see the map at the north east region, Nigeria appears to have the good water points ratio as the map shows Low-Low, insignificant and High-Low for non-functional water point ratio.
 
 ## 9 Hot Spot Area Analysis
 
@@ -799,9 +803,9 @@ First, we need to define a new set of neighbours. Whist the spatial autocorrelat
 
 There are two type of distance-based proximity matrix, they are:
 
-  -   fixed distance weight matrix; and
+-   fixed distance weight matrix; and
 
-  -   adaptive distance weight matrix.
+-   adaptive distance weight matrix.
 
 ### 9.1 Computing Gi statistics
 
@@ -812,12 +816,12 @@ fips <- order(nigeria_sf26391$shapeName)
 gi.fixed <- localG(nigeria_sf26391$`nonfunctional_ratio`, rswm_d73)
 gi.fixed
 ```
-The output of localG() is a vector of G or Gstar values, with attributes “gstari” set to TRUE or FALSE, “call” set to the function call, and class “localG”.
+
+The output of localG() is a vector of G or Gstar values, with attributes "gstari" set to TRUE or FALSE, "call" set to the function call, and class "localG".
 
 The Gi statistics is represented as a Z-score. Greater values represent a greater intensity of clustering and the direction (positive or negative) indicates high or low clusters.
 
 Next, we will join the Gi values to their corresponding hunan sf data frame by using the code chunk below.
-
 
 ```{r}
 nigeria_sf26391.gi <- cbind(nigeria_sf26391, as.matrix(gi.fixed)) %>%
@@ -825,6 +829,7 @@ nigeria_sf26391.gi <- cbind(nigeria_sf26391, as.matrix(gi.fixed)) %>%
 ```
 
 ### 9.2 Mapping Gi values with fixed distance weights
+
 The code chunk below shows the functions used to map the Gi values derived using fixed distance weight matrix.
 
 ```{r}
@@ -841,7 +846,9 @@ tmap_arrange(nonfuntion, Gimap, asp=1, ncol=2)
 ```
 
 ### 9.3 Gi statistics using adaptive distance
+
 The code chunk below are used to compute the Gi values for nonfunctional water point ratio by using an adaptive distance weight matrix.
+
 ```{r}
 fips <- order(nigeria_sf26391$shapeName)
 gi.adaptive <- localG(nigeria_sf26391$`nonfunctional_ratio`, knn_lw)
@@ -854,6 +861,7 @@ nigeria_sf26391.gi <- cbind(nigeria_sf26391, as.matrix(gi.adaptive)) %>%
 It is time for us to visualise the locations of hot spot and cold spot areas. The choropleth mapping functions of tmap package will be used to map the Gi values.
 
 The code chunk below shows the functions used to map the Gi values derived using fixed distance weight matrix.
+
 ```{r}
 nonfuntion<- qtm(nigeria_sf26391, "nonfunctional_ratio")
 
@@ -869,3 +877,13 @@ tmap_arrange(nonfuntion,
              asp=1, 
              ncol=2)
 ```
+
+### 9.5 Analysis of Gi Plot result
+
+The result of Gi plot appears to have the similar hot spot compared to LISA map. We can see for both distance based weighting methods, hot spots are much more located at south-west region for non-functional water point ratio. And cold spots for non-functional water point ratio are more located at north-east region which indicates the better water resources in this regions.
+
+The maps from LISA and Gi plot basically shows consistency for the non-functional water point distributions in the regions of Nigeria.
+
+## 10 Conclusion
+
+The Cluster Analysis and Hot/cold spot Analysis will better help the organization to allocate the manpower/material resources since the priority would be given to the areas which the water points require urgent repair works.

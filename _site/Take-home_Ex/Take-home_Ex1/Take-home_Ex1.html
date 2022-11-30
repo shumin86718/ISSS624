@@ -236,6 +236,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#plotting-lisa-mapfixed-distance-weight" id="toc-plotting-lisa-mapfixed-distance-weight" class="nav-link" data-scroll-target="#plotting-lisa-mapfixed-distance-weight">8.4 Plotting LISA map(fixed distance weight)</a></li>
   <li><a href="#preparing-lisa-map-classes-adaptive-distance-weight" id="toc-preparing-lisa-map-classes-adaptive-distance-weight" class="nav-link" data-scroll-target="#preparing-lisa-map-classes-adaptive-distance-weight">8.5 Preparing LISA map classes (adaptive distance weight)</a></li>
   <li><a href="#plotting-lisa-mapadaptive-distance-weight" id="toc-plotting-lisa-mapadaptive-distance-weight" class="nav-link" data-scroll-target="#plotting-lisa-mapadaptive-distance-weight">8.6 Plotting LISA map(adaptive distance weight)</a></li>
+  <li><a href="#lisa-plot-result" id="toc-lisa-plot-result" class="nav-link" data-scroll-target="#lisa-plot-result">8.7 LISA plot result</a></li>
   </ul></li>
   <li><a href="#hot-spot-area-analysis" id="toc-hot-spot-area-analysis" class="nav-link" data-scroll-target="#hot-spot-area-analysis">9 Hot Spot Area Analysis</a>
   <ul class="collapse">
@@ -244,7 +245,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#mapping-gi-values-with-fixed-distance-weights" id="toc-mapping-gi-values-with-fixed-distance-weights" class="nav-link" data-scroll-target="#mapping-gi-values-with-fixed-distance-weights">9.2 Mapping Gi values with fixed distance weights</a></li>
   <li><a href="#gi-statistics-using-adaptive-distance" id="toc-gi-statistics-using-adaptive-distance" class="nav-link" data-scroll-target="#gi-statistics-using-adaptive-distance">9.3 Gi statistics using adaptive distance</a></li>
   <li><a href="#mapping-gi-values-with-adaptive-distance-weights" id="toc-mapping-gi-values-with-adaptive-distance-weights" class="nav-link" data-scroll-target="#mapping-gi-values-with-adaptive-distance-weights">9.4 Mapping Gi values with adaptive distance weights</a></li>
+  <li><a href="#analysis-of-gi-plot-result" id="toc-analysis-of-gi-plot-result" class="nav-link" data-scroll-target="#analysis-of-gi-plot-result">9.5 Analysis of Gi Plot result</a></li>
   </ul></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">10 Conclusion</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -906,7 +909,7 @@ alternative hypothesis: greater</code></pre>
 <p>Spatial correlograms are used to examine patterns of spatial autocorrelation in the data or model residuals. They show how correlated are pairs of spatial observations when increase the distance (lag) between them - they are plots of some index of autocorrelation (Moran’s I or Geary’s c) against distance. Although correlograms are not as fundamental as variograms (a keystone concept of geostatistics), they are very useful as an exploratory and descriptive tool. For this purpose they actually provide richer information than variograms.</p>
 <section id="compute-morans-i-correlogram" class="level4">
 <h4 class="anchored" data-anchor-id="compute-morans-i-correlogram">6.4.1 Compute Moran’s I correlogram</h4>
-<p>In the code chunk below, sp.correlogram() of spdep package is used to compute a 6-lag spatial correlogram of GDPPC. The global spatial autocorrelation used in Moran’s I. The plot() of base Graph is then used to plot the output.</p>
+<p>In the code chunk below, sp.correlogram() of spdep package is used to compute a 6-lag spatial correlogram. The global spatial autocorrelation used in Moran’s I. The plot() of base Graph is then used to plot the output.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>MI_corr <span class="ot">&lt;-</span> <span class="fu">sp.correlogram</span>(wm_d73, </span>
 <span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>                          nigeria_sf26391<span class="sc">$</span><span class="st">`</span><span class="at">nonfunctional_ratio</span><span class="st">`</span>, </span>
@@ -944,7 +947,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </section>
 <section id="compute-gearys-c-correlogram-and-plot" class="level4">
 <h4 class="anchored" data-anchor-id="compute-gearys-c-correlogram-and-plot">6.4.2 Compute Geary’s C correlogram and plot</h4>
-<p>In the code chunk below, <em>sp.correlogram()</em> of <strong>spdep</strong> package is used to compute a 6-lag spatial correlogram of GDPPC. The global spatial autocorrelation used in Geary's C. The <strong>plot()</strong> of base Graph is then used to plot the output.</p>
+<p>In the code chunk below, <em>sp.correlogram()</em> of <strong>spdep</strong> package is used to compute a 6-lag spatial correlogram. The global spatial autocorrelation used in Geary’s C. The <strong>plot()</strong> of base Graph is then used to plot the output.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>GC_corr <span class="ot">&lt;-</span> <span class="fu">sp.correlogram</span>(wm_d73, </span>
 <span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>                          nigeria_sf26391<span class="sc">$</span><span class="st">`</span><span class="at">nonfunctional_ratio</span><span class="st">`</span>, </span>
@@ -980,8 +983,8 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <p>Local Indicators of Spatial Association or LISA are statistics that evaluate the existence of clusters in the spatial arrangement of a given variable. For instance if we are studying cancer rates among census tracts in a given city local clusters in the rates mean that there are areas that have higher or lower rates than is to be expected by chance alone; that is, the values occurring are above or below those of a random distribution in space.</p>
 <section id="computing-local-morans-i" class="level3">
 <h3 class="anchored" data-anchor-id="computing-local-morans-i">7.1 Computing local Moran’s I</h3>
-<p>To compute local Moran's I, the <a href="https://r-spatial.github.io/spdep/reference/localmoran.html"><em>localmoran()</em></a> function of <strong>spdep</strong> will be used. It computes <em>Ii</em> values, given a set of <em>zi</em> values and a listw object providing neighbour weighting information for the polygon associated with the zi values.</p>
-<p>The code chunks below are used to compute local Moran's I of nonfunctional water point ratio.</p>
+<p>To compute local Moran’s I, the <a href="https://r-spatial.github.io/spdep/reference/localmoran.html"><em>localmoran()</em></a> function of <strong>spdep</strong> will be used. It computes <em>Ii</em> values, given a set of <em>zi</em> values and a listw object providing neighbour weighting information for the polygon associated with the zi values.</p>
+<p>The code chunks below are used to compute local Moran’s I of nonfunctional water point ratio.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>fips <span class="ot">&lt;-</span> <span class="fu">order</span>(nigeria_sf26391<span class="sc">$</span>shapeName)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -1015,14 +1018,14 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
 <p><em>localmoran()</em> function returns a matrix of values whose columns are:</p>
 <ul>
-<li><p>Ii: the local Moran's I statistics</p></li>
+<li><p>Ii: the local Moran’s I statistics</p></li>
 <li><p>E.Ii: the expectation of local moran statistic under the randomisation hypothesis</p></li>
 <li><p>Var.Ii: the variance of local moran statistic under the randomisation hypothesis</p></li>
 <li><p>Z.Ii:the standard deviate of local moran statistic</p></li>
 <li><p>Pr(): the p-value of local moran statistic</p></li>
 </ul>
 <p><strong>Mapping the local Moran’s I</strong></p>
-<p>Before mapping the local Moran's I map, it is wise to append the local Moran's I dataframe (i.e.&nbsp;localMI) onto hunan SpatialPolygonDataFrame. The code chunks below can be used to perform the task. T</p>
+<p>Before mapping the local Moran’s I map, it is wise to append the local Moran’s I dataframe (i.e.&nbsp;localMI) onto hunan SpatialPolygonDataFrame. The code chunks below can be used to perform the task. T</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>nigeria_sf26391.localMI_dw <span class="ot">&lt;-</span> <span class="fu">cbind</span>(nigeria_sf26391,localMI_dw) <span class="sc">%&gt;%</span></span>
 <span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Pr.Ii =</span> Pr.z....E.Ii..)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1031,7 +1034,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>nigeria_sf26391.localMI_adp <span class="ot">&lt;-</span> <span class="fu">cbind</span>(nigeria_sf26391,localMI_adp) <span class="sc">%&gt;%</span></span>
 <span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Pr.Ii =</span> Pr.z....E.Ii..)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><strong>Mapping local Moran’s I values</strong> Using choropleth mapping functions of <strong>tmap</strong> package, we can plot the local Moran's I values by using the code chinks below.</p>
+<p><strong>Mapping local Moran’s I values</strong> Using choropleth mapping functions of <strong>tmap</strong> package, we can plot the local Moran’s I values by using the code chinks below.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(nigeria_sf26391.localMI_dw) <span class="sc">+</span></span>
 <span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Ii"</span>, </span>
@@ -1062,7 +1065,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
 <p><strong>Mapping local Moran’s I p-value</strong></p>
 <p>The choropleth shows there is evidence for both positive and negative Ii values. However, it is useful to consider the p-values for each of these values, as consider above.</p>
-<p>The code chunks below produce a choropleth map of Moran's I p-values by using functions of <strong>tmap</strong> package.</p>
+<p>The code chunks below produce a choropleth map of Moran’s I p-values by using functions of <strong>tmap</strong> package.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tm_shape</span>(nigeria_sf26391.localMI_dw) <span class="sc">+</span></span>
 <span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_fill</span>(<span class="at">col =</span> <span class="st">"Pr.Ii"</span>, </span>
@@ -1086,7 +1089,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
 </div>
 <p><strong>Mapping both local Moran’s I values and p-values for fixed distance weighting</strong></p>
-<p>For effective interpretation, it is better to plot both the local Moran's I values map and its corresponding p-values map next to each other.</p>
+<p>For effective interpretation, it is better to plot both the local Moran’s I values map and its corresponding p-values map next to each other.</p>
 <p>The code chunk below will be used to create such visualisation.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>localMI.map <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(nigeria_sf26391.localMI_dw) <span class="sc">+</span></span>
@@ -1190,7 +1193,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>DV <span class="ot">&lt;-</span> <span class="fu">scale</span>(nigeria_sf26391.localMI_dw<span class="sc">$</span><span class="st">`</span><span class="at">nonfunctional_ratio</span><span class="st">`</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>This is follow by centering the local Moran's around the mean.</p>
+<p>This is follow by centering the local Moran’s around the mean.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>LM_I <span class="ot">&lt;-</span> localMI_dw[,<span class="dv">1</span>] <span class="sc">-</span> <span class="fu">mean</span>(localMI_dw[,<span class="dv">1</span>])    </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -1228,7 +1231,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <p><img src="Take-home_Ex1_files/figure-html/unnamed-chunk-71-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-<p>For effective interpretation, it is better to plot both the local Moran's I values map and its corresponding p-values map next to each other.</p>
+<p>For effective interpretation, it is better to plot both the local Moran’s I values map and its corresponding p-values map next to each other.</p>
 <p>The code chunk below will be used to create such visualisation.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a>nonfuntion <span class="ot">&lt;-</span> <span class="fu">qtm</span>(nigeria_sf26391, <span class="st">"nonfunctional_ratio"</span>)</span>
@@ -1317,6 +1320,11 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <p><img src="Take-home_Ex1_files/figure-html/unnamed-chunk-80-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+</section>
+<section id="lisa-plot-result" class="level3">
+<h3 class="anchored" data-anchor-id="lisa-plot-result">8.7 LISA plot result</h3>
+<p>For the distance based weighting method, both fixed distance and adaptive distance weighting seems to have similar High-High clusters at the south-west region for non-functional water point ratio.</p>
+<p>At the same time, we can see the map at the north east region, Nigeria appears to have the good water points ratio as the map shows Low-Low, insignificant and High-Low for non-functional water point ratio.</p>
 </section>
 </section>
 <section id="hot-spot-area-analysis" class="level2">
@@ -1625,9 +1633,18 @@ attr(,"class")
 <p><img src="Take-home_Ex1_files/figure-html/unnamed-chunk-85-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
-
-
 </section>
+<section id="analysis-of-gi-plot-result" class="level3">
+<h3 class="anchored" data-anchor-id="analysis-of-gi-plot-result">9.5 Analysis of Gi Plot result</h3>
+<p>The result of Gi plot appears to have the similar hot spot compared to LISA map. We can see for both distance based weighting methods, hot spots are much more located at south-west region for non-functional water point ratio. And cold spots for non-functional water point ratio are more located at north-east region which indicates the better water resources in this regions.</p>
+<p>The maps from LISA and Gi plot basically shows consistency for the non-functional water point distributions in the regions of Nigeria.</p>
+</section>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">10 Conclusion</h2>
+<p>The Cluster Analysis and Hot/cold spot Analysis will better help the organization to allocate the manpower/material resources since the priority would be given to the areas which the water points require urgent repair works.</p>
+
+
 </section>
 </section>
 
