@@ -389,6 +389,8 @@ hist(bperm_nonfun_adp$res,
 abline(v=0, 
        col="red") 
 ```
+From above plots and results of the Monte Carlos Moran I test, we can conclude that all the results are statistically significant with p-value < 0.05 and all the Moran I values are positive suggested that the non functional water points are clustered.
+
 
 ### 6.3 Global Spatial Autocorrelation: Geary's
 
