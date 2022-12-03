@@ -1,6 +1,8 @@
 ---
-title: "Hands-on_Ex3"
+title: "In-class_Ex3"
 editor: visual
+author: Han Shumin
+date: 03-December-2022
 ---
 
 ## 5.1 Overview
@@ -61,7 +63,7 @@ The R packages needed for this exercise are as follows:
 
 -   Multivariate data visualisation and analysis
 
-    -   **coorplot**, **ggpubr**, and **heatmaply**
+    -   **coorplot (correlation plot)**, **ggpubr**, and **heatmaply**
 
 -   Cluster analysis
 
@@ -74,7 +76,7 @@ The code chunks below installs and launches these R packages into R environment.
 ```{r}
 pacman::p_load(rgdal, spdep, tmap, sf, 
                ggpubr, cluster, factoextra, NbClust,
-               heatmaply, corrplot, psych, tidyverse)
+               heatmaply, corrplot, psych, tidyverse, ClustGeo)
 ```
 
 ## 5.4 Data Import and Prepatation
@@ -92,6 +94,8 @@ shan_sf <- st_read(dsn = "data/geospatial",
                    layer = "myanmar_township_boundaries") %>%
   filter(ST %in% c("Shan (East)", "Shan (North)", "Shan (South)"))
 ```
+
+![](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAaCAYAAADFTB7LAAAAa0lEQVR42u3OywnAIBBAwcXSUoCW5D11xDoNCBGNv0MOecJOBSOi1OZMsJ4dvFxEJ1OQnMxBarIKEpNNkJbsBknJYZCSnAYJyVVQziNig7/nZkFEbhTE5HpBVO4dxOXKIDL3BLG5BJ1T6rsbMfep2CaMN00AAAAASUVORK5CYII= "Run Current Chunk")
 
 The imported township boundary object is called *shan_sf*. It is saved in **simple feature data.frame** format. We can view the content of the newly created *shan_sf* simple features data.frame by using the code chunk below.
 
@@ -129,11 +133,11 @@ There are a total of eleven fields and 55 observation in the tibble data.frame.
 
 ### 
 
-5.4.3 Derive new variables using **dplyr** package
+### 5.4.3 Derive new variables using **dplyr** package
 
 The unit of measurement of the values are number of household. Using these values directly will be bias by the underlying total number of households. In general, the townships with relatively higher total number of households will also have higher number of households owning radio, TV, etc.
 
-In order to overcome this problem, we will derive the penetration rate of each ICT variable by using the code chunk below.
+In order to overcome this problem, we will derive the penetration rate of each ICT variable by using the code chunk below. **(per thousand households, not percentage)**
 
 ```{r}
 ict_derived <- ict %>%
@@ -174,6 +178,10 @@ ggplot(data=ict_derived,
                  color="black", 
                  fill="light blue")
 ```
+
+Insert the plot photo by Image function
+
+![](/_site/Hands-on_Ex/Hands-on_Ex3/Hands-on_Ex3_files/figure-html/unnamed-chunk-9-1.png)
 
 Boxplot is useful to detect if there are outliers.
 
@@ -255,12 +263,13 @@ ggarrange(radio, tv, llphone, mphone, computer, internet,
 
 Before we can prepare the choropleth map, we need to combine both the geospatial data object (i.e. *shan_sf*) and aspatial data.frame object (i.e. *ict_derived*) into one. This will be performed by using the [*left_join*](https://dplyr.tidyverse.org/reference/join.tbl_df.html) function of **dplyr** package. The *shan_sf* simple feature data.frame will be used as the base data object and the *ict_derived* data.frame will be used as the join table.
 
-The code chunks below is used to perform the task. The unique identifier used to join both data objects is *TS_PCODE*.
+The code chunks below is used to perform the task. The unique identifier used to join both data objects is *TS_PCODE*. **(column name already being changed to the same, actually no need line 3 code, "by=c("TS_PCODE"="TS_PCODE")")**
 
 ```{r}
 shan_sf <- left_join(shan_sf, 
                      ict_derived, 
                      by=c("TS_PCODE"="TS_PCODE"))
+write_rds(shan_sf, "data/rds/shan_sf.rds")
 ```
 
 The message above shows that *TS_CODE* field is the common field used to perform the left-join.
@@ -315,7 +324,7 @@ tm_shape(shan_sf) +
 
 Before we perform cluster analysis, it is important for us to ensure that the cluster variables are not highly correlated.
 
-In this section, you will learn how to use [*corrplot.mixed()*](https://cran.r-project.org/web/packages/corrplot/corrplot.pdf) function of [**corrplot**](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html) package to visualise and analyse the correlation of the input variables.
+In this section, you will learn how to use [*corrplot.mixed()*](https://cran.r-project.org/web/packages/corrplot/corrplot.pdf) function of [**corrplot**](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html) package to visualise and analyse the correlation of the input variables. **(only pick up columns 12 to 17)**
 
 ```{r}
 cluster_vars.cor = cor(ict_derived[,12:17])
@@ -442,7 +451,7 @@ proxmat <- dist(shan_ict, method = 'euclidean')
 
 The code chunk below can then be used to list the content of *proxmat* for visual inspection.
 
-```{r}
+```{r echo=TRUE, eval=FALSE}
 proxmat
 ```
 
@@ -458,15 +467,21 @@ The code chunk below performs hierarchical cluster analysis using ward.D method.
 hclust_ward <- hclust(proxmat, method = 'ward.D')
 ```
 
-We can then plot the tree by using *plot()* of R Graphics as shown in the code chunk below.
+We can then plot the tree by using *plot()* of R Graphics as shown in the code chunk below. **(cex scaled the resolution to 60%, so the column name won't overlapped)**
 
-```{r}
+```{r fig.width=10, fig.height=6}
 plot(hclust_ward, cex = 0.6)
 ```
 
 ### 5.7.8 Selecting the optimal clustering algorithm
 
-One of the challenge in performing hierarchical clustering is to identify stronger clustering structures. The issue can be solved by using use [*agnes()*](https://www.rdocumentation.org/packages/cluster/versions/2.1.0/topics/agnes) function of [**cluster**](https://cran.r-project.org/web/packages/cluster/) package. It functions like *hclus()*, however, with the *agnes()* function you can also get the agglomerative coefficient, which measures the amount of clustering structure found (values closer to 1 suggest strong clustering structure).
+One of the challenge in performing hierarchical clustering is to identify stronger clustering structures. The issue can be solved by using use [*agnes()*](https://www.rdocumentation.org/packages/cluster/versions/2.1.0/topics/agnes) function of [**cluster**](https://cran.r-project.org/web/packages/cluster/) package. It functions like *hclus()*, however, with the ***agnes()*** **function** you can also get the agglomerative coefficient, which measures the amount of clustering structure found (values closer to 1 suggest strong clustering structure).
+
+**!!!! doesn't understand this part**
+
+**(agnes() function gives the best value; function(x)'s x is same as method = x, measures how homogenizes???, refer to agnes() function in reference)**
+
+**function() is a looping, refer to function() reference file.**
 
 The code chunk below will be used to compute the agglomerative coefficients of all hierarchical clustering algorithms.
 
@@ -532,6 +547,8 @@ The height of the fusion, provided on the vertical axis, indicates the (dis)simi
 
 It's also possible to draw the dendrogram with a border around the selected clusters by using [*rect.hclust()*](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/rect.hclust.html) of R stats. The argument *border* is used to specify the border colors for the rectangles.
 
+identify 6 clusters
+
 ```{r}
 plot(hclust_ward, cex = 0.6)
 rect.hclust(hclust_ward, 
@@ -576,6 +593,14 @@ heatmaply(normalize(shan_ict_mat),
           )
 ```
 
+My notes:
+
+cluster 1 looks high intensity in MPHONE_PR and COMPUTER_PR and TV_PR
+
+cluster 2 seems high MPHONE_PR and TV_PR
+
+each cluster can plot as box-plot, able to see the mean and upper and lower quatiles
+
 ### 5.7.12 Mapping the clusters formed
 
 With closed examination of the dendragram above, we have decided to retain six clusters.
@@ -586,20 +611,22 @@ With closed examination of the dendragram above, we have decided to retain six c
 groups <- as.factor(cutree(hclust_ward, k=6))
 ```
 
-The output is called *groups*. It is a *list* object.
+**The output is called *groups*. It is a *list* object, save the clusters dataframe to groups.**
 
 In order to visualise the clusters, the *groups* object need to be appended onto *shan_sf* simple feature object.
 
 The code chunk below form the join in three steps:
 
--   the *groups* list object will be converted into a matrix;
+**!!!**
 
--   *cbind()* is used to append *groups* matrix onto shan_sf to produce an output simple feature object called `shan_sf_cluster`; and
+-   **the *groups* list object will be converted into a matrix;**
 
--   *rename* of **dplyr** package is used to rename *as.matrix.groups* field as *CLUSTER*.
+-   ***cbind()*** **is used to append *groups* matrix onto shan_sf to produce an output simple feature object called `shan_sf_cluster`; and**
+
+-   ***rename*** **of dplyr package is used to rename *as.matrix.groups* field as *CLUSTER*.**
 
 ```{r}
-shan_sf_cluster <- cbind(shan_sf, as.matrix(groups)) %>%
+shan_sf_cluster <- cbind(shan_sf, as.matrix(groups))%>%
   rename(`CLUSTER`=`as.matrix.groups.`)
 ```
 
@@ -619,7 +646,7 @@ In this section, you will learn how to derive spatially constrained cluster by u
 
 First, we need to convert `shan_sf` into SpatialPolygonsDataFrame. This is because SKATER function only support **sp** objects such as SpatialPolygonDataFrame.
 
-The code chunk below uses [*as_Spatial()*](https://r-spatial.github.io/sf/reference/coerce-methods.html) of **sf** package to convert *shan_sf* into a SpatialPolygonDataFrame called *shan_sp*.
+The code chunk below uses [*as_Spatial()*](https://r-spatial.github.io/sf/reference/coerce-methods.html) of **sf** package to convert *shan_sf* into a SpatialPolygonDataFrame called *shan_sp*, it is different from shan_sf which without geometric column, polygon list stored separately as a list.
 
 ```{r}
 shan_sp <- as_Spatial(shan_sf)
@@ -635,6 +662,8 @@ summary(shan.nb)
 ```
 
 We can plot the neighbours list on shan_sp by using the code chunk below. Since we now can plot the community area boundaries as well, we plot this graph on top of the map. The first plot command gives the boundaries. This is followed by the plot of the neighbor list object, with coordinates applied to the original SpatialPolygonDataFrame (Shan state township boundaries) to extract the centroids of the polygons. These are used as the nodes for the graph representation. We also set the color to blue and specify add=TRUE to plot the network on top of the boundaries.
+
+Contiguity method, it needs to have neighbours.
 
 ```{r}
 plot(shan_sp, 
@@ -663,7 +692,7 @@ For each observation, this gives the pairwise dissimilarity between its values o
 
 Next, We will incorporate these costs into a weights object in the same way as we did in the calculation of inverse of distance weights. In other words, we convert the neighbour list to a list weights object by specifying the just computed ***lcosts*** as the weights.
 
-In order to achieve this, [*nb2listw()*](https://r-spatial.github.io/spdep/reference/nb2listw.html) of **spdep** package is used as shown in the code chunk below.
+In order to achieve this, [*nb2listw()*](https://r-spatial.github.io/spdep/reference/nb2listw.html) of **spdep** package is used as shown in the code chunk below, convert it to a weight matrix **shan.w**.
 
 Note that we specify the *style* as **B** to make sure the cost values are not row-standardised.
 
@@ -760,7 +789,7 @@ plot(clust6,
 
 ### 5.8.6 Visualising the clusters in choropleth map
 
-The code chunk below is used to plot the newly derived clusters by using SKATER method.
+The code chunk below is used to plot the newly derived clusters by using SKATER method. **do not do any sorting when do table joining, why?**
 
 ```{r}
 groups_mat <- as.matrix(clust6$groups)
@@ -784,4 +813,89 @@ tmap_arrange(hclust.map, shclust.map,
              asp=NA, ncol=2)
 ```
 
-### 
+### 5.9 Spatially Constrained Clustering: ClustGeo Method
+
+In this section, you will gain hands-on experience on using functions provided by **ClustGeo** package to perform non-spatially constrained hierarchical cluster analysis and spatially constrained cluster analysis.
+
+### 5.9.1 Ward-like hierarchical clustering: ClustGeo
+
+ClustGeo package provides function called `hclustgeo()` to perform a typical Ward-like hierarchical clustering just like `hclust()` you learned in previous section.
+
+To perform non-spatially constrained hierarchical clustering, we only need to provide the function a dissimilarity matrix as shown in the code chunk below.
+
+```{r}
+nongeo_cluster <- hclustgeo(proxmat)
+plot(nongeo_cluster, cex = 0.5)
+rect.hclust(nongeo_cluster, 
+            k = 6, 
+            border = 2:5)
+```
+
+Note that the dissimilarity matrix must be an object of class `dist`, i.e. an object obtained with the function `dist()`. For sample code chunk, please refer to [5.7.6 Computing proximity matrix](https://r4gdsa.netlify.app/chap05.html#computing-proximity-matrix)
+
+#### 5.9.1.1 Mapping the clusters formed
+
+Similarly, we can plot the clusters on a categorical area shaded map by using the steps we learned in 5.7.12 Mapping the clusters formed.
+
+```{r}
+groups <- as.factor(cutree(nongeo_cluster, k=6))
+```
+
+```{r}
+shan_sf_ngeo_cluster <- cbind(shan_sf, as.matrix(groups)) %>%
+  rename(`CLUSTER` = `as.matrix.groups.`)
+```
+
+```{r}
+qtm(shan_sf_ngeo_cluster, "CLUSTER")
+```
+
+### 5.9.2 Spatially Constrained Hierarchical Clustering
+
+Before we can performed spatially constrained hierarchical clustering, a spatial distance matrix will be derived by using [`st_distance()`](https://r-spatial.github.io/sf/reference/geos_measures.html) of sf package.
+
+```{r}
+dist <- st_distance(shan_sf, shan_sf)
+distmat <- as.dist(dist)
+```
+
+Notice that `as.dist()` is used to convert the data frame into matrix.
+
+Next, `choicealpha()` will be used to determine a suitable value for the mixing parameter alpha as shown in the code chunk below.
+
+**D0 black is the attribute space, D1 red is the spatial space, choicealpha() balance both spatial and attribute homogeneity. When is 1, it is the perfect homogenizes, when it is smaller, it reduced the homogenizes.**
+
+seq(0,1,**0.1**) **0.1 is the increment.**
+
+**K is the uppercase K is not the same as small letter k**
+
+**1st plot is the normalized one, 2nd is not the non-normalized, so the normalized D0 lost 20%, and D1 reduce 40% homogeneity.**
+
+```{r}
+cr <- choicealpha(proxmat, distmat, range.alpha = seq(0, 1, 0.1), K=6, graph = TRUE)
+```
+
+With reference to the graphs above, alpha = 0.3 will be used as shown in the code chunk below.
+
+```{r}
+clustG <- hclustgeo(proxmat, distmat, alpha = 0.3)
+```
+
+Next, `cutree()` is used to derive the cluster objecct.
+
+```{r}
+groups <- as.factor(cutree(clustG, k=6))
+```
+
+We will then join back the group list with shan_sf polygon feature data frame by using the code chun below.
+
+```{r}
+shan_sf_Gcluster <- cbind(shan_sf, as.matrix(groups)) %>%
+  rename(`CLUSTER` = `as.matrix.groups.`)
+```
+
+We can not plot the map of the newly delineated spatially constrained clusters.
+
+```{r}
+qtm(shan_sf_Gcluster, "CLUSTER")
+```
