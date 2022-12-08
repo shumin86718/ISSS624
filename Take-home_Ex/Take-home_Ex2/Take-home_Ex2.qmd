@@ -1,5 +1,5 @@
 ---
-title: "Take-home_Ex2 Regionalisation with Spatially Constrained Cluster Analysis"
+title: "Regionalisation with Spatially Constrained Cluster Analysis"
 editor: visual
 author: HanShumin
 date: 11 Dec 2022
