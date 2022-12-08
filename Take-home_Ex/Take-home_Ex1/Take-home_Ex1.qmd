@@ -389,8 +389,8 @@ hist(bperm_nonfun_adp$res,
 abline(v=0, 
        col="red") 
 ```
-From above plots and results of the Monte Carlos Moran I test, we can conclude that all the results are statistically significant with p-value < 0.05 and all the Moran I values are positive suggested that the non functional water points are clustered.
 
+From above plots and results of the Monte Carlos Moran I test, we can conclude that all the results are statistically significant with p-value \< 0.05 and all the Moran I values are positive suggested that the non functional water points are clustered.
 
 ### 6.3 Global Spatial Autocorrelation: Geary's
 
@@ -785,6 +785,7 @@ LISAmap <- tm_shape(nigeria_sf26391.localMI_adp) +
 
 tmap_arrange(nonfuntion_adp, LISAmap, asp=1, ncol=2)
 ```
+
 ### 8.7 LISA plot result
 
 For the distance based weighting method, both fixed distance and adaptive distance weighting seems to have similar High-High clusters at the south-west region for non-functional water point ratio.
