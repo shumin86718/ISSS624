@@ -1000,7 +1000,7 @@ ggparcoord(data = nga_sf_spatialcluster,
            scale = "std",
            alphaLines = 0.2,
            boxplot = TRUE, 
-           title = "Multiple Parallel Coordinates Plots of Nigeria Variables by Cluster") +
+           title = "Multiple Parallel Coordinates Plots of Nigeria Variables by Cluster") + 
   facet_grid(~ CLUSTER) + 
   theme(axis.text.x = element_text(angle = 30))
 
