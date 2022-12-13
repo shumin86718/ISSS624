@@ -1240,4 +1240,4 @@ tmap_arrange(ngeoclust.map, gcluster.map,
 tmap_arrange(hclust.map, shclust.map, ngeoclust.map, gcluster.map, ncol = 2, asp = 1)
 ```
 
-From the analysis, we can clearly identify that using Hierarchical and Wand-like clustering with the LGA boundaries are more fragmented as compared to other clusters which are less fragmented. SKATER Clustering algorithm still provide more clear-cut clustering however when we need to focus on a particular problem in s specific small area, SKATER method may not reflect the best results as clear-cut clustering may be missed some small details.
+From the analysis, we can clearly identify that using Hierarchical and Wand-like clustering with the LGA boundaries are more fragmented as compared to other clusters which are less fragmented. SKATER Clustering algorithm still provide more clear-cut clustering however when we need to focus on a particular problem in a specific small area, SKATER method may not reflect the best results as clear-cut clustering may be missed some small details.
