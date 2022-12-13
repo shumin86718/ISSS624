@@ -274,7 +274,7 @@ st_crs(nga)
 st_crs(wp_sfT)
 ```
 
-Below code chunks create new columns of total water point count, functional/non-functional and unknown water points count by using *st_intersects()* function.
+Below code chunks create new columns of total water point count, functional/non-functional, unknown water points count, high/low usage water point count and water point count in non-urban region by using *st_intersects()* function.
 
 ```{r}
 nga$WPCount <- lengths(st_intersects(nga, wp_sfT))
@@ -308,7 +308,7 @@ nga$usageL1k <- lengths(st_intersects(nga, usageL1k))
 nga$ruralWP <- lengths(st_intersects(nga, ruralWP))
 ```
 
-Also the ratios of functional/non-functional, and unknown water points are been created.
+Also the ratios of functional/non-functional, unknown water points, high/low usage water point and water point in non-urban region are been created.
 
 ```{r}
 nga <- nga %>%
@@ -469,6 +469,8 @@ ggarrange(Bpct_functional, Bpct_nonfunctional, Bpct_handpump, Bpct_usageCap1k, B
           nrow = 2)
 ```
 
+Large numbers of outliers are appeared in nonfunctional water point ratio while rest of the percentage variables do not have outliers.
+
 ### EDA using choropleth map
 
 ```{r,fig.height=10, fig.width=8}
@@ -504,6 +506,8 @@ corrplot.mixed(cluster_vars.cor,
 In this exercise, if correlation coefficient value is greater than 0.85 then the variables are said to be highly correlated. The correlation plot above shows that `pct_usageCap1k` and `pct_usageCapLess1k` are highly correlated. This suggest that `pct_handpump` and `pct_usageCapLess1k` should be used in the cluster analysis instead of three variables.
 
 ## Hierarchy Cluster Analysis
+
+### Extracting clustering variables
 
 The code chunk below will be used to extract the clustering variables from the *nga_sf* simple feature object into data.frame.
 
@@ -628,7 +632,7 @@ ggarrange(r, s, z,
           nrow = 1)
 ```
 
-#### Computing proximity matrix
+### Computing proximity matrix
 
 In R, many packages provide functions to calculate distance matrix. We will compute the proximity matrix by using [*dist()*](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/dist.html) of R.
 
@@ -646,7 +650,7 @@ The code chunk below can then be used to list the content of *proxmat* for visua
 #proxmat
 ```
 
-#### Computing Hierarchical clustering
+### Computing Hierarchical clustering
 
 In R, there are several packages provide hierarchical clustering function. In this take-home exercise, [*hclust()*](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/hclust.html) of R stats will be used.
 
@@ -664,7 +668,7 @@ We can then plot the tree by using *plot()* of R Graphics as shown in the code c
 plot(hclust_ward, cex = 0.6)
 ```
 
-#### Selecting the optimal clustering algorithm
+### Selecting the optimal clustering algorithm
 
 One of the challenge in performing hierarchical clustering is to identify stronger clustering structures. The issue can be solved by using use [*agnes()*](https://www.rdocumentation.org/packages/cluster/versions/2.1.0/topics/agnes) function of [**cluster**](https://cran.r-project.org/web/packages/cluster/) package. It functions like *hclus()*, however, with the *agnes()* function you can also get the agglomerative coefficient, which measures the amount of clustering structure found (values closer to 1 suggest strong clustering structure).
 
@@ -724,7 +728,7 @@ fviz_gap_stat(gap_stat)
 
 With reference to the gap statistic graph above, the recommended number of cluster to retain is **5**.
 
-#### **"Elbow" Method**
+#### **Elbow Method**
 
 The Elbow Curve method is helpful because it shows how increasing the number of the clusters contribute separating the clusters in a meaningful way, not in a marginal way. The bend indicates that additional clusters beyond the third have little value (See \[[here](http://web.stanford.edu/~hastie/Papers/gap.pdf)\] for a more mathematically rigorous interpretation and implementation of this method). The Elbow method is fairly clear, if not a naïve solution based on intra-cluster variance. The gap statistic is more sophisticated method to deal with data that has a distribution with no obvious clustering.
 
@@ -751,7 +755,7 @@ With **heatmaply**, we are able to build both highly interactive cluster heatmap
 
 The data was loaded into a data frame, but it has to be a data matrix to make your heatmap.
 
-The code chunk below will be used to transform *shan_ict* data frame into a data matrix.
+The code chunk below will be used to transform *nga_cluster_var* data frame into a data matrix.
 
 ```{r}
 nga_cluster_var_mat <- data.matrix(nga_cluster_var)
@@ -826,15 +830,33 @@ ggparcoord(data = nga_sf_cluster,
            boxplot = TRUE, 
            title = "Multiple Parallel Coordinates Plots of Nigeria Variables by Cluster") +
   facet_grid(~ CLUSTER) + 
-  theme(axis.text.x = element_text(angle = 30)) +
+  theme(axis.text.x = element_text(angle = 30, size = 15)) +
   scale_color_viridis(option = "C", discrete=TRUE)
+```
+
+The parallel coordinate plot above reveals that in Cluster 4 tend to own the highest percentage of non-functional water point which matched with choropleth map on `pct_nonfunctional`. On the other hand, Cluster 1 tends to own the lowest of percentage of rural water points which indicated the regions in cluster 1 should have majority of urban areas.
+
+We can also compute the summary statistics such as mean, median, sd, etc to complement the visual interpretation.
+
+In the code chunk below, `group_by()` and `summarise()` of dplyr are used to derive mean values of the clustering variables.
+
+```{r}
+nga_sf_cluster %>% 
+  st_set_geometry(NULL) %>%
+  group_by(CLUSTER) %>%
+  summarise(mean_pct_functional = mean(pct_functional),
+            mean_pct_nonfunctional = mean(pct_nonfunctional),
+            mean_pct_handpump = mean(pct_handpump),
+            mean_pct_usage1k = mean(pct_usage1k),
+            mean_pct_usageL1k = mean(pct_usageL1k),
+            mean_pct_ruralWP = mean(pct_ruralWP))
 ```
 
 ## Spatially Constrained Clustering: SKATER approach
 
 In this section, you will learn how to derive spatially constrained cluster by using [*skater()*](https://r-spatial.github.io/spdep/reference/skater.html) method of [**spdep**](https://r-spatial.github.io/spdep/) package.
 
-### 5.8.1 Converting into SpatialPolygonsDataFrame
+### Converting into SpatialPolygonsDataFrame
 
 First, we need to convert `nga_sf` into SpatialPolygonsDataFrame. This is because SKATER function only support **sp** objects such as SpatialPolygonDataFrame.
 
@@ -861,7 +883,7 @@ summary(nga.nb)
 
 We can plot the neighbours list on nga_sp by using the code chunk below. Since we now can plot the community area boundaries as well, we plot this graph on top of the map. The first plot command gives the boundaries. This is followed by the plot of the neighbor list object, with coordinates applied to the original SpatialPolygonDataFrame (Nga Admin 2 boundaries) to extract the centroids of the polygons. These are used as the nodes for the graph representation. We also set the color to blue and specify add=TRUE to plot the network on top of the boundaries.
 
-```{r}
+```{r,fig.height=15, fig.width=17}
 plot(nga_sp, 
      border=grey(.5))
 plot(nga.nb, 
@@ -899,7 +921,7 @@ nga.w <- nb2listw(nga.nb,
 summary(nga.w)
 ```
 
-### Computing minimum spanning tree
+#### Computing minimum spanning tree
 
 The minimum spanning tree is computed by mean of the [*mstree()*](https://r-spatial.github.io/spdep/reference/mstree.html) of **spdep** package as shown in the code chunk below.
 
@@ -927,7 +949,7 @@ head(nga.mst)
 
 The plot method for the MST include a way to show the observation numbers of the nodes in addition to the edge. As before, we plot this together with the admin 2 boundaries. We can see how the initial neighbour list is simplified to just one edge connecting each of the nodes, while passing through all the nodes.
 
-```{r}
+```{r,fig.height=15, fig.width=17}
 plot(nga_sp, border=gray(.5))
 plot.mst(nga.mst, 
          coordinates(nga_sp), 
@@ -973,7 +995,7 @@ table(ccs5)
 
 Lastly, we can also plot the pruned tree that shows the five clusters on top of the admin 2 area.
 
-```{r}
+```{r,fig.height=15, fig.width=17}
 plot(nga_sp, border=gray(.5))
 plot(clust5, 
      coordinates(nga_sp), 
@@ -1007,13 +1029,31 @@ ggparcoord(data = nga_sf_spatialcluster,
            boxplot = TRUE, 
            title = "Multiple Parallel Coordinates Plots of Nigeria Variables by Cluster") + 
   facet_grid(~ SP_CLUSTER) + 
-  theme(axis.text.x = element_text(angle = 30)) +
+  theme(axis.text.x = element_text(angle = 30, size = 15)) +
   scale_color_viridis(option = "C", discrete=TRUE)
+```
+
+The parallel coordinate plot above reveals that in Cluster 2 tend to own the highest percentage of non-functional water point. On the other hand, Cluster 1, 2 & 3 have similar lowermost percentage of rural water points which I felt the clustering results may not have that accuracy since in real situation the clustering cannot be so clear-cut.
+
+We can also compute the summary statistics such as mean, median, sd, etc to complement the visual interpretation.
+
+In the code chunk below, `group_by()` and `summarise()` of dplyr are used to derive mean values of the clustering variables.
+
+```{r}
+nga_sf_spatialcluster %>% 
+  st_set_geometry(NULL) %>%
+  group_by(SP_CLUSTER) %>%
+  summarise(mean_pct_functional = mean(pct_functional),
+            mean_pct_nonfunctional = mean(pct_nonfunctional),
+            mean_pct_handpump = mean(pct_handpump),
+            mean_pct_usage1k = mean(pct_usage1k),
+            mean_pct_usageL1k = mean(pct_usageL1k),
+            mean_pct_ruralWP = mean(pct_ruralWP))
 ```
 
 For easy comparison, it will be better to place both the hierarchical clustering and spatially constrained hierarchical clustering maps next to each other.
 
-```{r}
+```{r,fig.height=8, fig.width=12}
 hclust.map <- qtm(nga_sf_cluster,
                   "CLUSTER", title = "Hierarchical clustering") + 
   tm_borders(alpha = 0.5) 
@@ -1080,8 +1120,26 @@ ggparcoord(data = nga_sf_ngeo_cluster,
            boxplot = TRUE, 
            title = "Multiple Parallel Coordinates Plots of Nigeria Variables by Cluster") +
   facet_grid(~ CLUSTER) + 
-  theme(axis.text.x = element_text(angle = 30)) +
+  theme(axis.text.x = element_text(angle = 30, size = 15)) +
   scale_color_viridis(option = "C", discrete=TRUE)
+```
+
+The parallel coordinate plot above reveals that in Cluster 4 tend to own the highest percentage of non-functional water point. On the other hand, Cluster 1 has lowermost percentage of rural water points.
+
+We can also compute the summary statistics such as mean, median, sd, etc to complement the visual interpretation.
+
+In the code chunk below, `group_by()` and `summarise()` of dplyr are used to derive mean values of the clustering variables.
+
+```{r}
+nga_sf_ngeo_cluster %>% 
+  st_set_geometry(NULL) %>%
+  group_by(CLUSTER) %>%
+  summarise(mean_pct_functional = mean(pct_functional),
+            mean_pct_nonfunctional = mean(pct_nonfunctional),
+            mean_pct_handpump = mean(pct_handpump),
+            mean_pct_usage1k = mean(pct_usage1k),
+            mean_pct_usageL1k = mean(pct_usageL1k),
+            mean_pct_ruralWP = mean(pct_ruralWP))
 ```
 
 ### Spatially Constrained Hierarchical Clustering
@@ -1139,11 +1197,29 @@ ggparcoord(data = nga_sf_Gcluster,
            boxplot = TRUE, 
            title = "Multiple Parallel Coordinates Plots of Nigeria Variables by Cluster") +
   facet_grid(~ CLUSTER) + 
-  theme(axis.text.x = element_text(angle = 30)) +
+  theme(axis.text.x = element_text(angle = 30, size = 15)) +
   scale_color_viridis(option = "C", discrete=TRUE)
 ```
 
-```{r,fig.height=10, fig.width=8}
+The parallel coordinate plot above reveals that in Cluster 2 tend to own the highest percentage of non-functional water point which the regions are consistent with the choropleth map on `pct_nonfunctional` . On the other hand, Cluster 1 has lowermost percentage of rural water points.
+
+We can also compute the summary statistics such as mean, median, sd, etc to complement the visual interpretation.
+
+In the code chunk below, `group_by()` and `summarise()` of dplyr are used to derive mean values of the clustering variables.
+
+```{r}
+nga_sf_Gcluster %>% 
+  st_set_geometry(NULL) %>%
+  group_by(CLUSTER) %>%
+  summarise(mean_pct_functional = mean(pct_functional),
+            mean_pct_nonfunctional = mean(pct_nonfunctional),
+            mean_pct_handpump = mean(pct_handpump),
+            mean_pct_usage1k = mean(pct_usage1k),
+            mean_pct_usageL1k = mean(pct_usageL1k),
+            mean_pct_ruralWP = mean(pct_ruralWP))
+```
+
+```{r,fig.height=8, fig.width=12}
 ngeoclust.map <- qtm(nga_sf_ngeo_cluster,
                   "CLUSTER", title = "Ward-like hierarchical clustering") + 
   tm_borders(alpha = 0.5) 
@@ -1156,8 +1232,12 @@ tmap_arrange(ngeoclust.map, gcluster.map,
              asp=NA, ncol=2)
 ```
 
+## Conclusion
+
 ### **Visualisation of all the Clustering Results**
 
-```{r,fig.height=10, fig.width=8}
+```{r,fig.height=8, fig.width=8}
 tmap_arrange(hclust.map, shclust.map, ngeoclust.map, gcluster.map, ncol = 2, asp = 1)
 ```
+
+From the analysis, we can clearly identify that using Hierarchical and Wand-like clustering with the LGA boundaries are more fragmented as compared to other clusters which are less fragmented. SKATER Clustering algorithm still provide more clear-cut clustering however when we need to focus on a particular problem in s specific small area, SKATER method may not reflect the best results as clear-cut clustering may be missed some small details.
