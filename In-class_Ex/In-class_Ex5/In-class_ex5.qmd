@@ -1,0 +1,510 @@
+---
+title: "In-class_Ex5 Modeling the Spatial Variation and the Explanatory factors of Water Point Status using Geographic Weighted Logistic Regression"
+editor: visual
+author: HanShumin
+date: 17 Dec 2022
+---
+
+## Setting the scene
+
+-   To build an explanatory model to discover factor affecting water point status in Osun state, Nigeria
+
+-   Study area: Osun State, Nigeria
+
+-   Data sets:
+
+-   Osun.rds, contains LGAs boundaries of Osun State. It is in sf polygon dataframe, and
+
+-   Osun_wp_sf.rds, contained water points within Osun State. It is in sf point dataframe.
+
+## Model Variables
+
+-   Dependent variable: water point status (ie. functional/non-functional)
+
+-   Independent variables:
+
+-   distance_primary_road
+
+-   distance_to_secondary_road
+
+-   distance_to_tertiary_road
+
+-   distance_to_city
+
+-   distance_to_town
+
+-   water_point_population
+
+-   local_population_1km
+
+-   usage_capacity,
+
+-   is_urban,
+
+-   water_source_clean
+
+## Getting start
+
+create in-class Exercise 5 folder
+
+Write a code chunk to load the following R package: **sf, tidyverse, funModeling, blorr, corrplot, ggpubr, sf, spdep, GWmodel, tmap, skimr, caret**
+
+-   sf for importing and processing geospatial data,
+
+-   tidyverse for importing and processing non-spatial data. In this exercise, readr package will be used for importing wkt data and dplyr package will be used to wrangling the data.
+
+-   Spatial data handling
+
+    -   **sf** and **spdep**
+
+-   Attribute data handling
+
+    -   **tidyverse**
+
+-   Choropleth mapping
+
+    -   **tmap**
+
+-   Multivariate data visualisation and analysis
+
+    -   **coorplot**, **ggpubr**,
+
+-   Classification And REgression Training
+
+    -   **caret**
+
+-   Automated Reporting
+
+    -   **report**
+
+-   Binary Logistic Regression Models
+
+    -   **blorr**
+
+-   Geographically-Weighted Models
+
+    -   **GWmodel**
+
+-   summary statistics about variables in data frames
+
+    -   **skimr**
+
+```{r}
+pacman::p_load(rgdal, spdep, tmap, sf, 
+               ggpubr, corrplot, tidyverse, funModeling, blorr, GWmodel, skimr, caret, report)
+```
+
+## Data Import
+
+The code chunk below load the datasets into R.
+
+```{r}
+Osun <- read_rds("rds/Osun.rds")
+Osun_wp_sf <- read_rds("rds/Osun_wp_sf.rds")
+```
+
+Thanks to Prof, the `Osun` and `Osun_wp_sf` datasets have been pre-cleaned and wrangled. In the code chunk below, `freq()` of **funModeling** package is used to display the distribution of status field in `Osun_wp_sf`.
+
+```{r}
+Osun_wp_sf %>% 
+  freq(input = "status")
+```
+
+From the plot we can tell Osun consists of about 55.5% of functional water points, 44.5% of non-functional water points. Unknown water points has been excluded in the dataset.
+
+we plot the distribution of the water points by status using tmap, as shown in the code chunk below.
+
+```{r}
+tmap_mode("view")
+tm_shape(Osun)+
+  tm_polygons(alpha = 0.4) +
+tm_shape(Osun_wp_sf) +
+  tm_dots(col = "status",
+          alpha = 0.6) +
+  tm_view(set.zoom.limits = c(9,12))
+```
+
+## Exploratory Data Analysis
+
+Summary Statistics with **skimr**
+
+```{r}
+Osun_wp_sf %>%
+  skim()
+```
+
+With above statistics reports, we noticed in variable `install_year`, there are 25% are missing values. To impute the missing value with zero may introduce bias to the dataset hence we need to drop this variable before feed into the modeling.
+
+The following variables are selected for modelling. To ensure there is no missing values in the dataset, we use `all_var(!is.na(.))` to exclude the missing values.
+
+Factors are used to represent categorical data. Here we will recode `usage_capacity` as categorical variables since it has only 3 types of values.
+
+```{r}
+Osun_wp_sf_clean <- Osun_wp_sf %>%
+  filter_at(vars(status,
+                 distance_to_primary_road,
+                 distance_to_secondary_road,
+                 distance_to_tertiary_road,
+                 distance_to_city,
+                 distance_to_town,
+                 water_point_population,
+                 local_population_1km,
+                 usage_capacity,
+                 is_urban,
+                 water_source_clean),
+            all_vars(!is.na(.)))%>%
+  mutate(usage_capacity = as.factor(usage_capacity))
+```
+
+## Correlation Analysis
+
+We will extract the desired variables from `Osun_wp_sf_clean` dataframe and assign to `Osun_wp` dataframe, also exclude `st_set_geometry` for following correlation matrix plot setp.
+
+```{r}
+Osun_wp <- Osun_wp_sf_clean %>%
+  select(c(7,35:39,42:43,46:47,57)) %>%
+  st_set_geometry(NULL)
+```
+
+```{r}
+cluster_vars.cor = cor(
+  Osun_wp[,2:7])
+corrplot.mixed(cluster_vars.cor,
+               lower = "ellipse",
+               upper = "number",
+               tl.pos = "lt",
+               diag = "l",
+               tl.col = "black")
+```
+
+Noticed all variables we selected are not highly correlated with each other. Therefore we do not need to remove any of them.
+
+## Building a Logistic Regression Models
+
+We will use below code chunk to fit generalized linear model, the function is **glm**.
+
+```{r}
+model <- glm(status ~ distance_to_primary_road +
+               distance_to_secondary_road +
+               distance_to_tertiary_road +
+               distance_to_city +
+               distance_to_town +
+               is_urban +
+               usage_capacity +
+               water_source_clean +
+               water_point_population +
+               local_population_1km,
+             data = Osun_wp_sf_clean,
+             family = binomial(link = 'logit'))
+```
+
+`blr_regress` is Binary logistic regression.
+
+```{r}
+blr_regress(model)
+```
+
+The report above shown that P-value for variable `distance_to_primary_road` and `distance_to_secondary_road` are not statistically significant at 95% Confidence Level.
+
+```{r}
+report(model)
+```
+
+Below code chunk use **blr_confusion_matrix** to generate the binary logistic regression confusion matrix.
+
+```{r}
+blr_confusion_matrix(model, cutoff = 0.5)
+```
+
+The contingency table has 4 data cells:\
+1. Actual 0 Predicted 0 -- The number of cases that were both predicted and\
+observed as 0. The records in this cell are referred to as **true negatives**.\
+The model classification was correct for these records.\
+2. Actual 0 Predicted 1 -- The number of cases that were predicted as 1 yet\
+observed as 0. The records in this cell are referred to as **false positives**. The\
+model classification was incorrect for these records.\
+3. Actual 1 Predicted 1 -- The number of cases that were both predicted and\
+observed as 1. The records in this cell are referred to as **true positives**. The\
+model classification was correct for these records.\
+4. Actual 1 Predicted 0 -- The number of cases that were predicted as 0 yet\
+observed as 1. The records in this cell are referred to as **false negatives**. The\
+model classification was incorrect for these records.
+
+![](images/Screenshot%202022-12-17%20100235.jpg)
+
+The **overall accuracy** is the sum of the number of correctly classified observations\
+divided by the total number of observations. This not particularly useful in statistics point of view.\
+**Sensitivity** is also known as true positive rate or recall. It answers the question, "If\
+the model predicts a positive event, what is the probability that it really is positive?"
+
+**Specificity** is the true negative rate. It answer the question, "If the model predicts a\
+negative event, what is the probability that it really is negative?".
+
+The **false positive rate** can be also defined as 1-specificity.
+
+From above confusion matrix, the true positive (sensitivity) is 0.7207 and true negative (specificity) is 0.6154 which is slightly lower than true positive, it can be interpret as functional water point rate is slightly higher than non-functional wate point rate.
+
+## Geographically Weighted Regression Model
+
+### Converting sf to Spatial Point Dataframe
+
+The code chunk below convert sf dataframe to Spatial Points Dataframe.
+
+```{r}
+Osun_wp_sp <- Osun_wp_sf_clean %>%
+  select(c(status,
+           distance_to_primary_road,
+           distance_to_secondary_road,
+           distance_to_tertiary_road,
+           distance_to_city,
+           distance_to_town,
+           water_point_population,
+           local_population_1km,
+           is_urban,
+           usage_capacity,
+           water_source_clean)) %>%
+  as_Spatial()
+Osun_wp_sp
+```
+
+### Computing Fixed Bandwidth
+
+```{r}
+bw.fixed <- bw.ggwr(status ~ distance_to_primary_road +
+                     distance_to_secondary_road +
+                     distance_to_tertiary_road +
+                     distance_to_city +
+                     distance_to_town +
+                     is_urban +
+                     usage_capacity +
+                     water_source_clean +
+                     water_point_population +
+                     local_population_1km,
+                   data = Osun_wp_sp,
+                   family = "binomial",
+                   approach = "AIC",
+                   kernel = "gaussian",
+                   adaptive = FALSE,
+                   longlat = FALSE)
+```
+
+```{r}
+bw.fixed
+```
+
+From the above, we can see that the bandwidth calculated is 2599.672.
+
+### Building GWR Model (Fixed Bandwidth)
+
+```{r}
+gwlr.fixed <- ggwr.basic(status ~
+                      distance_to_primary_road +
+                      distance_to_secondary_road +
+                      distance_to_tertiary_road +
+                      distance_to_city +
+                      distance_to_town +
+                      water_point_population +
+                      local_population_1km +
+                      is_urban +
+                      usage_capacity +
+                      water_source_clean,
+                    data=Osun_wp_sp,
+                    bw = bw.fixed,
+                    family = "binomial",
+                    kernel = "gaussian",
+                    adaptive = FALSE,
+                    longlat = FALSE)
+```
+
+```{r}
+gwlr.fixed
+```
+
+AIC for Generalized linear Regression model is 5712 compare with AIC of Geographically Weighted Regression which is 4414.606, so we can say Geographically Weighted Regression model performance is better than Generalized linear Regression model.
+
+#### Converting SDF into sf dataframe
+
+To access the performance of the gwLR, firstly, we will convert the SDF object in as dataframe by using the code chunk below.
+
+```{r}
+gwr.fixed <- as.data.frame(gwlr.fixed$SDF)
+```
+
+next, we will label yhat values greater or equal to 0.5 into 1 and else 0. The result of the logic comparison operation will be saved into a field called most.
+
+```{r}
+gwr.fixed <- gwr.fixed %>%
+  mutate(most = ifelse(
+    gwr.fixed$yhat >= 0.5, T, F))
+```
+
+`confusionMatrix` is using to show the confusion matrix of GW model using fixed bandwidth.
+
+```{r}
+gwr.fixed$y <- as.factor(gwr.fixed$y)
+gwr.fixed$most <- as.factor(gwr.fixed$most)
+CM <- confusionMatrix(data=gwr.fixed$most, reference = gwr.fixed$y, positive = "TRUE")
+CM
+```
+
+We can see from the CM result, True Positive rate improved for gwLR model.
+
+### Visulising gwLR
+
+```{r}
+Osun_wp_sf_selected <- Osun_wp_sf_clean %>%
+  select(c(ADM2_EN, ADM2_PCODE,
+           ADM1_EN, ADM1_PCODE,
+           status))
+```
+
+```{r}
+gwr_sf.fixed <- cbind(Osun_wp_sf_selected, gwr.fixed)
+```
+
+```{r}
+tmap_mode("view")
+prob_T <- tm_shape(Osun) +
+  tm_polygons(alpha = 0.1) +
+tm_shape(gwr_sf.fixed) +
+  tm_dots(col = "yhat",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(8,14))
+prob_T
+```
+
+## Building a Logistic Regression Models with removal of Statistically insingnificant variables
+
+In the earlier report of binary logistic regression model, we saw two variables `distance_to_primary_road` and `distance_to_secondary_road` are not statistically significant at 95% Confidence Level. Therefore we should exclude these two variables when build the logistic regression model.
+
+Below code chunk repeat above steps for rebuild the model for new fixed bandwidth without above two variables.
+
+```{r}
+model_re <- glm(status ~ distance_to_tertiary_road +
+               distance_to_city +
+               distance_to_town +
+               is_urban +
+               usage_capacity +
+               water_source_clean +
+               water_point_population +
+               local_population_1km,
+             data = Osun_wp_sf_clean,
+             family = binomial(link = 'logit'))
+blr_regress(model_re)
+```
+
+```{r}
+report(model_re)
+```
+
+```{r}
+blr_confusion_matrix(model_re, cutoff = 0.5)
+```
+
+### Computing Fixed Bandwidth
+
+```{r}
+bw.fixed_re <- bw.ggwr(status ~ distance_to_tertiary_road +
+                     distance_to_city +
+                     distance_to_town +
+                     is_urban +
+                     usage_capacity +
+                     water_source_clean +
+                     water_point_population +
+                     local_population_1km,
+                   data = Osun_wp_sp,
+                   family = "binomial",
+                   approach = "AIC",
+                   kernel = "gaussian",
+                   adaptive = FALSE,
+                   longlat = FALSE)
+```
+
+```{r}
+bw.fixed_re
+```
+
+From the above, we can see that the new bandwidth calculated is 2377.371.
+
+### Building GWR Model (Fixed Bandwidth)
+
+```{r}
+gwlr.fixed_re <- ggwr.basic(status ~distance_to_tertiary_road +
+                      distance_to_city +
+                      distance_to_town +
+                      water_point_population +
+                      local_population_1km +
+                      is_urban +
+                      usage_capacity +
+                      water_source_clean,
+                    data=Osun_wp_sp,
+                    bw = bw.fixed_re,
+                    family = "binomial",
+                    kernel = "gaussian",
+                    adaptive = FALSE,
+                    longlat = FALSE)
+```
+
+```{r}
+gwlr.fixed_re
+```
+
+AIC for Generalized linear Regression model is 5708.923 compare with AIC of Geographically Weighted Regression which is 4418.776, so we can say Geographically Weighted Regression model performance is better than Generalized linear Regression model.
+
+#### Converting SDF into sf dataframe
+
+To access the performance of the gwLR, firstly, we will convert the SDF object in as dataframe by using the code chunk below.
+
+```{r}
+gwr.fixed_re <- as.data.frame(gwlr.fixed_re$SDF)
+```
+
+```{r}
+gwr.fixed_re <- gwr.fixed_re %>%
+  mutate(most = ifelse(
+    gwr.fixed_re$yhat >= 0.5, T, F))
+```
+
+```{r}
+gwr.fixed_re$y <- as.factor(gwr.fixed_re$y)
+gwr.fixed_re$most <- as.factor(gwr.fixed_re$most)
+CM_re <- confusionMatrix(data=gwr.fixed_re$most, reference = gwr.fixed_re$y, positive = "TRUE")
+CM_re
+```
+
+We can see from the CM result, True Positive rate improved for gwLR model.
+
+### Visulising gwLR
+
+```{r}
+gwr_sf.fixed_re <- cbind(Osun_wp_sf_selected, gwr.fixed_re)
+```
+
+```{r}
+tmap_mode("view")
+prob_T_re <- tm_shape(Osun) +
+  tm_polygons(alpha = 0.1) +
+tm_shape(gwr_sf.fixed_re) +
+  tm_dots(col = "yhat",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(8,14))
+prob_T_re
+```
+
+## Performance Comparison
+
+Table below shows the True positive and True negative comparison of 4 logistic regression models.
+
++-------------+-----------------------------------------------+----------------------------+-----------------------------------------------+----------------------------+
+| Performance | Generalized linear Regression (all variables) | gwLR Model (all variables) | Generalized linear Regression (exclude 2 var) | gwLR Model (exclude 2 var) |
+|             |                                               |                            |                                               |                            |
+| Measure     |                                               |                            |                                               |                            |
++=============+===============================================+============================+===============================================+============================+
+| TP          | 0.7207                                        | 0.9005                     | 0.7188                                        | 0.8986                     |
++-------------+-----------------------------------------------+----------------------------+-----------------------------------------------+----------------------------+
+| TN          | 0.6154                                        | 0.8628                     | 0.6149                                        | 0.8671                     |
++-------------+-----------------------------------------------+----------------------------+-----------------------------------------------+----------------------------+
+
+From above comparison table, the True Positive did not improve after we exclude the two in-significant variables. However, the True Negative of gwLR model improved slightly with exclude the two variables. So we may consider to use gwLR model if we want to focus on analysing non-functional water point ratio. On the other hand, compare the results of GW regression model and generalized linear regression model, it cleared shown that the GW regression model is more robust either in AIC value or the performance measures.

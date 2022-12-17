@@ -50,9 +50,10 @@ The R packages needed for this exercise are as follows:
     -   **tmap**
 
         The code chunks below installs and launches these R packages into R environment.
-```{r, echo=FALSE}
-knitr::opts_chunk$set(error = TRUE)
-```
+
+        ```{r, echo=FALSE}
+        knitr::opts_chunk$set(error = TRUE)
+        ```
 
 ```{r}
 pacman::p_load(olsrr, corrplot, ggpubr, sf, spdep, GWmodel, tmap, tidyverse, gtsummary)
